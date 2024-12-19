@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:game/client/image_client.dart';
 
-import 'client/ApiClient.dart';
+import 'client/api_client.dart';
 
 class GamePage extends StatefulWidget {
   final String movieName;
@@ -23,14 +25,41 @@ class GamePage extends StatefulWidget {
 class _GamePageState extends State<GamePage> {
   final TextEditingController _controller = TextEditingController();
   final apiClient = ApiClient();
+  final imageClient = ImageClient();
+  Image? backgroundImage;
   String? threadId = null;
-  double progressValue = 100.0; // Initial progress value
+  double progressValue = 50.0; // Initial progress value
+  final accentColor = const Color(0xFFE2543E); // Adjust as needed
 
   @override
   void initState() {
     super.initState();
     startChat();
+    getBackgroundImage();
+
   }
+
+  Future<void> getBackgroundImage() async {
+    try {
+      final images = await imageClient.getImage();
+      if (images.isNotEmpty) {
+        setState(() {
+          backgroundImage = images[0]; // Set the first image as the background
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No images returned by the server')),
+        );
+      }
+    } catch (e) {
+      print('Error fetching background image: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load background image')),
+      );
+    }
+  }
+
+
 
   final List<Map<String, dynamic>> _messages = [];
 
@@ -140,155 +169,163 @@ class _GamePageState extends State<GamePage> {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = const Color(0xFFE2543E);
-
     return Scaffold(
-      backgroundColor: const Color(0xFFE3EBE7),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Top bar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              color: Colors.white,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.chatName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          widget.movieName,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.green,
-                          ),
-                        ),
-                      ],
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFE3EBE7), // Your desired background color
+            image: backgroundImage != null
+                ? DecorationImage(
+              image: backgroundImage!.image, // Use the Image's image property
+              fit: BoxFit.cover, // Adjust as needed
+            )
+                : null, // Keep the color until the image is available
+          ),
+          child: Column(
+            children: [
+              // Top bar
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                color: Colors.white.withOpacity(0.8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => Navigator.pop(context),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.more_vert),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
-            ),
-
-            // Progress bar
-            ProgressBar(value: progressValue),
-
-            // Messages List
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                reverse: false,
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final msg = _messages[index];
-                  final isMe = msg['isMe'] as bool;
-                  final hasText = msg.containsKey('text');
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                    child: Column(
-                      crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                      children: [
-                        if (hasText)
-                          Container(
-                            constraints: BoxConstraints(
-                              maxWidth: MediaQuery.of(context).size.width * 0.7,
-                            ),
-                            padding: const EdgeInsets.all(12.0),
-                            decoration: BoxDecoration(
-                              color: isMe ? accentColor : Colors.white,
-                              borderRadius: BorderRadius.circular(16.0),
-                            ),
-                            child: Text(
-                              msg['text'],
-                              style: TextStyle(
-                                color: isMe ? Colors.white : Colors.black,
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              msg['time'],
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
-                            ),
-                            const SizedBox(width: 4),
-                            if (isMe && msg['status'] == 'read') ...[
-                              Icon(Icons.check, size: 14, color: Colors.grey),
-                              Icon(Icons.check, size: 14, color: Colors.grey),
-                            ],
-                          ],
-                        )
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // Bottom input bar
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () {},
-                  ),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(24.0),
-                      ),
-                      child: Row(
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _controller,
-                              decoration: const InputDecoration(
-                                hintText: 'Write a message',
-                                border: InputBorder.none,
-                              ),
+                          Text(
+                            widget.chatName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.emoji_emotions_outlined),
-                            onPressed: () {},
+                          SizedBox(height: 2),
+                          Text(
+                            widget.movieName,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.green,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: _sendMessage,
-                  ),
-                ],
+                    IconButton(
+                      icon: const Icon(Icons.more_vert),
+                      onPressed: () {},
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+
+              // Progress bar
+              ProgressBar(value: progressValue),
+
+              // Messages List
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  reverse: false,
+                  itemCount: _messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = _messages[index];
+                    final isMe = msg['isMe'] as bool;
+                    final hasText = msg.containsKey('text');
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                      child: Column(
+                        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                        children: [
+                          if (hasText)
+                            Container(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery.of(context).size.width * 0.7,
+                              ),
+                              padding: const EdgeInsets.all(12.0),
+                              decoration: BoxDecoration(
+                                color: isMe ? accentColor : Colors.white,
+                                borderRadius: BorderRadius.circular(16.0),
+                              ),
+                              child: Text(
+                                msg['text'],
+                                style: TextStyle(
+                                  color: isMe ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                msg['time'],
+                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                              const SizedBox(width: 4),
+                              if (isMe && msg['status'] == 'read') ...[
+                                Icon(Icons.check, size: 14, color: Colors.grey),
+                                Icon(Icons.check, size: 14, color: Colors.grey),
+                              ],
+                            ],
+                          )
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Bottom input bar
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: () {},
+                    ),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(24.0),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _controller,
+                                decoration: const InputDecoration(
+                                  hintText: 'Write a message',
+                                  border: InputBorder.none,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.emoji_emotions_outlined),
+                              onPressed: () {},
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.send),
+                      onPressed: _sendMessage,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

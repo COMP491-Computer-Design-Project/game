@@ -19,6 +19,9 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
     {'name': 'The Matrix', 'image': 'assets/images/matrix.png'},
   ];
 
+  final Color backgroundColor = const Color(0xFFE3EBE7); // Example background color
+  final Color accentColor = const Color(0xFFE2543E); // Example accent color
+
   void _navigateToCharacterCreation() {
     final selectedMovie = _movies[_currentMovieIndex]['name']!;
     final gameName = _gameNameController.text;
@@ -44,8 +47,14 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: Text('Choose a Movie'),
+        backgroundColor: accentColor,
+        title: const Text(
+          'Choose a Movie',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -56,7 +65,7 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
                 child: CarouselSlider.builder(
                   itemCount: _movies.length,
                   options: CarouselOptions(
-                    height: 300.0, // Adjust the height for the images
+                    height: 300.0,
                     enlargeCenterPage: true,
                     onPageChanged: (index, reason) {
                       setState(() {
@@ -74,18 +83,61 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
                 ),
               ),
             ),
-            SizedBox(height: 16.0),
-            TextField(
-              controller: _gameNameController,
-              decoration: InputDecoration(
-                labelText: 'Enter game name',
-                border: OutlineInputBorder(),
+            const SizedBox(height: 24.0),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: const Offset(0, 2),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _gameNameController,
+                decoration: const InputDecoration(
+                  hintText: 'Enter game name',
+                  prefixIcon: Icon(Icons.edit_outlined),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                ),
               ),
             ),
-            SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: _navigateToCharacterCreation,
-              child: Text('Continue to Character Creation'),
+            const SizedBox(height: 24.0),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: accentColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24.0),
+                  ),
+                  elevation: 2,
+                ),
+                onPressed: _navigateToCharacterCreation,
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Continue to Character Creation',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_forward,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -103,28 +155,61 @@ class MovieWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColor = const Color(0xFFE3EBE7); // Match app's background
+    final accentColor = const Color(0xFFE2543E); // Match app's accent color
+
     return Card(
-      elevation: 4.0,
+      elevation: 6.0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(24.0),
       ),
+      color: backgroundColor.withOpacity(0.9),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-            child: Image.asset(
-              imagePath,
-              height: 200.0, // Adjust height of the image
-              width: double.infinity,
-              fit: BoxFit.cover,
+          // Movie image with gradient overlay
+          Expanded(
+            flex: 3,
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
+                  child: Image.asset(
+                    imagePath,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withOpacity(0.5),
+                        Colors.transparent,
+                      ],
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              movieName,
-              style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
+          // Movie name
+          Expanded(
+            flex: 1,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                movieName,
+                style: TextStyle(
+                  fontSize: 20.0,
+                  fontWeight: FontWeight.bold,
+                  color: accentColor, // Use app's accent color
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
         ],
@@ -132,3 +217,5 @@ class MovieWidget extends StatelessWidget {
     );
   }
 }
+
+

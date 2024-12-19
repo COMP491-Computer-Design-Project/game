@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'character_feature_info.dart';
+import '../model/character_feature_info.dart';
 
 class CharacterFeatureWidget extends StatefulWidget {
   final CharacterFeatureInfo feature;
@@ -45,32 +45,46 @@ class _CharacterFeatureWidgetState extends State<CharacterFeatureWidget> {
               ),
             ),
             const SizedBox(height: 8),
-
-            // Feature Description
             Text(
               widget.feature.description,
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 16),
 
-            // Slider
+            // Slider with custom theme
             Row(
               children: [
-                Text(_currentValue.toInt().toString(),
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  _currentValue.toInt().toString(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
                 Expanded(
-                  child: Slider(
-                    value: _currentValue,
-                    min: 0,
-                    max: 10,
-                    divisions: 10,
-                    label: _currentValue.toInt().toString(),
-                    onChanged: (value) {
-                      setState(() {
-                        _currentValue = value;
-                      });
-                      widget.onValueChanged?.call(value);
-                    },
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: const Color(0xFFE2543E), // Accent color
+                      inactiveTrackColor: const Color(0xFFE3EBE7), // Background color
+                      thumbColor: const Color(0xFFE2543E), // Accent color
+                      overlayColor: const Color(0xFFE2543E).withOpacity(0.2),
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10.0),
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 20.0),
+                      trackHeight: 4.0,
+                    ),
+                    child: Slider(
+                      value: _currentValue,
+                      min: 0,
+                      max: 10,
+                      divisions: 10,
+                      label: _currentValue.toInt().toString(),
+                      onChanged: (value) {
+                        setState(() {
+                          _currentValue = value;
+                        });
+                        widget.onValueChanged?.call(value);
+                      },
+                    ),
                   ),
                 ),
               ],

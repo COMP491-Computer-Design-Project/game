@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:game/client/ApiClient.dart';
+import 'package:game/client/api_client.dart';
 import 'package:game/register.dart';
 
 import 'home.dart';
@@ -230,8 +230,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       onPressed: () async {
                         try {
-                          // Assuming you have `_emailOrPhoneController` and `_passwordController`
-                          // providing the user's input, and `apiClient` is already instantiated.
                           final emailOrPhone = _emailOrPhoneController.text;
                           final password = _passwordController.text;
 

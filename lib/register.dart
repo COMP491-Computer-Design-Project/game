@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:game/client/ApiClient.dart';
+import 'package:game/client/api_client.dart';
 import 'package:game/home.dart';
 
 class RegisterPage extends StatefulWidget {
