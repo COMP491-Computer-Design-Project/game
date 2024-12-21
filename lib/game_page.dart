@@ -1,20 +1,20 @@
 import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:game/client/image_client.dart';
-
+import 'package:game/theme/theme.dart';
 import 'client/api_client.dart';
 
 class GamePage extends StatefulWidget {
   final String movieName;
   final String chatName;
+  final String movieId;
   final Map<String, int> characterValues;
 
   const GamePage({
     Key? key,
     required this.movieName,
     required this.chatName,
+    required this.movieId,
     required this.characterValues,
   }) : super(key: key);
 
@@ -22,21 +22,412 @@ class GamePage extends StatefulWidget {
   State<GamePage> createState() => _GamePageState();
 }
 
-class _GamePageState extends State<GamePage> {
+class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final apiClient = ApiClient();
   final imageClient = ImageClient();
+  final List<Map<String, dynamic>> _messages = [];
+  final ScrollController _scrollController = ScrollController();
+  
   Image? backgroundImage;
-  String? threadId = null;
-  double progressValue = 50.0; // Initial progress value
-  final accentColor = const Color(0xFFE2543E); // Adjust as needed
+  String? threadId;
+  double progressValue = 50.0;
+  bool isTyping = false;
+  late AnimationController _fadeController;
+  late AnimationController _slideController;
+  late Animation<double> _backgroundFadeAnimation;
+
+  // Callback function to update message text
+  void updateMessageText(int index, String text) {
+    if (mounted) {
+      setState(() {
+        if (index < _messages.length) {
+          _messages[index]['text'] = text;
+        }
+      });
+      // Scroll to bottom when message updates
+      _scrollToBottom();
+    }
+  }
+
+  // Callback function to update message status  
+  void updateMessageStatus(int index, String status) {
+    if (mounted) {
+      setState(() {
+        if (index < _messages.length) {
+          _messages[index]['status'] = status;
+        }
+      });
+    }
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _fadeController = AnimationController(
+      duration: const Duration(seconds: 1),
+      vsync: this,
+    );
+    _backgroundFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 0.5,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeIn,
+    ));
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
     startChat();
     getBackgroundImage();
+  }
 
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    _slideController.dispose();
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: AppTheme.backgroundGradient,
+          image: backgroundImage != null
+              ? DecorationImage(
+                  image: backgroundImage!.image,
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withOpacity(_backgroundFadeAnimation.value),
+                    BlendMode.darken,
+                  ),
+                )
+              : null,
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Game Header
+              _buildGameHeader(),
+              
+              // Progress and Stats Bar
+              _buildProgressBar(),
+              
+              // Messages List
+              Expanded(
+                child: _buildMessagesList(),
+              ),
+
+              // Input Bar
+              _buildInputBar(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGameHeader() {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.paddingSmall),
+      decoration: BoxDecoration(
+        color: Colors.black54,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: AppTheme.paddingSmall),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.chatName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  widget.movieName,
+                  style: TextStyle(
+                    color: AppTheme.accent,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _buildMenuButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressBar() {
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.paddingSmall),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStatChip(Icons.favorite, "Health", "100"),
+              _buildStatChip(Icons.flash_on, "Energy", "75"),
+              _buildStatChip(Icons.star, "Experience", "240"),
+            ],
+          ),
+          const SizedBox(height: AppTheme.paddingSmall),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: progressValue / 100,
+                  backgroundColor: Colors.white10,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accent),
+                  minHeight: 30,
+                ),
+              ),
+              Text(
+                '${progressValue.toInt()}%',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatChip(IconData icon, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.paddingSmall,
+        vertical: 4,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.black54,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.accent.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: AppTheme.accent, size: 16),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessagesList() {
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.paddingSmall,
+        vertical: AppTheme.paddingSmall,
+      ),
+      itemCount: _messages.length,
+      itemBuilder: (context, index) {
+        final msg = _messages[index];
+        return _buildMessageBubble(msg);
+      },
+    );
+  }
+
+  Widget _buildMessageBubble(Map<String, dynamic> message) {
+    final isMe = message['isMe'] as bool;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.paddingSmall),
+      child: Row(
+        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!isMe) _buildCharacterAvatar(),
+          const SizedBox(width: AppTheme.paddingSmall),
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.all(AppTheme.paddingSmall),
+              decoration: BoxDecoration(
+                color: isMe ? AppTheme.accent.withOpacity(0.9) : Colors.black54,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isMe ? AppTheme.accent : Colors.white24,
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    message['text'] ?? '',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isMe) ...[
+            const SizedBox(width: 4),
+            Icon(
+              message['status'] == 'read' ? Icons.done_all : Icons.done,
+              color: Colors.white60,
+              size: 16,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCharacterAvatar() {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: AppTheme.accentGradient,
+      ),
+      child: const Icon(Icons.person, color: Colors.white),
+    );
+  }
+
+  Widget _buildInputBar() {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.paddingSmall),
+      decoration: BoxDecoration(
+        color: Colors.black54,
+        border: Border(top: BorderSide(color: AppTheme.accent.withOpacity(0.3))),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+            onPressed: () {}, // Add item/skill selection
+          ),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingSmall),
+              decoration: BoxDecoration(
+                color: Colors.white10,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: TextField(
+                controller: _controller,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: 'What would you like to do?',
+                  hintStyle: TextStyle(color: Colors.white60),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.send, color: Colors.white),
+            onPressed: _sendMessage,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuButton() {
+    return IconButton(
+      icon: const Icon(Icons.pause, color: Colors.white),
+      onPressed: () {
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Colors.black87,
+              title: Text(
+                'Game Paused',
+                style: TextStyle(color: AppTheme.accent),
+                textAlign: TextAlign.center,
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.save, color: AppTheme.accent),
+                    title: const Text('Save Game', style: TextStyle(color: Colors.white)),
+                    onTap: () {
+                      // Implement save game logic
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.exit_to_app, color: AppTheme.accent),
+                    title: const Text('Exit Game', style: TextStyle(color: Colors.white)),
+                    onTap: () {
+                      Navigator.pop(context); // Close dialog
+                      Navigator.pop(context); // Exit game
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _handleChoice(String choice) {
+    // Implement choice handling logic
+    _sendMessage(customText: choice);
+  }
+
+  void _sendMessage({String? customText}) {
+    final message = customText ?? _controller.text.trim();
+    if (message.isEmpty) return;
+
+    setState(() {
+      _messages.add({
+        'isMe': true,
+        'text': message,
+        'time': TimeOfDay.now().format(context),
+        'status': 'sent',
+      });
+      _controller.clear();
+    });
+
+    _scrollToBottom();
+
+    if (threadId != null) {
+      print('Continuing chat with thread id: $threadId');
+      continueChat(message, threadId!);
+    }
   }
 
   Future<void> getBackgroundImage() async {
@@ -46,6 +437,7 @@ class _GamePageState extends State<GamePage> {
         setState(() {
           backgroundImage = images[0]; // Set the first image as the background
         });
+        _fadeController.forward(); // Start the fade-in animation
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('No images returned by the server')),
@@ -59,27 +451,24 @@ class _GamePageState extends State<GamePage> {
     }
   }
 
-
-
-  final List<Map<String, dynamic>> _messages = [];
-
   Future<void> startChat() async {
     String message = 'Merhaba';
-    String accumulatedMessage = ''; // To accumulate messages
-    String buffer = ''; // Buffer to store incomplete JSON chunks
+    String accumulatedMessage = ''; // Accumulates incoming text from the server
+    String buffer = '';            // Holds partial data until a complete JSON object is found
 
-    Map<String, dynamic> requestBody = {
-      'movieName': widget.movieName,
+    // Prepare your request body
+    final Map<String, dynamic> requestBody = {
+      'movieName': widget.movieId,
       'chatName': widget.chatName,
       'message': message,
+      ...widget.characterValues,
     };
 
-    requestBody.addAll(widget.characterValues);
-
     try {
-      // Fetch the text stream from the API
-      Stream<String> chatStream = await apiClient.startChat(requestBody);
+      // 1. Request a real streaming response from the API
+      final Stream<String> chatStream = await apiClient.startChat(requestBody);
 
+      // 2. Create a placeholder in the UI for the incoming message
       setState(() {
         _messages.add({
           'isMe': false,
@@ -89,43 +478,49 @@ class _GamePageState extends State<GamePage> {
         });
       });
 
-      int lastIndex = _messages.length - 1; // Track the last message index
+      final int lastIndex = _messages.length - 1;
 
-      chatStream.listen((newChunk) {
+      // 3. Listen for chunks from the stream
+      await for (final newChunk in chatStream) {
         try {
-          // Add new chunk to the buffer
+          // Append chunk to our buffer
           buffer += newChunk;
 
-          // Process complete JSON objects in the buffer
-          while (buffer.contains('}') || buffer.contains(']')) {
-            int jsonEnd = buffer.indexOf('}') + 1;
+          // While we can find a closing brace, parse out one complete JSON object at a time
+          while (true) {
+            final endIndex = buffer.indexOf('}');
+            if (endIndex == -1) {
+              // No complete JSON object yet
+              break;
+            }
 
             // Extract the complete JSON object
-            String completeJson = buffer.substring(0, jsonEnd);
+            final completeJson = buffer.substring(0, endIndex + 1);
+            // Remove it from the buffer
+            buffer = buffer.substring(endIndex + 1);
 
-            // Attempt to parse JSON
+            // Attempt to parse
             final Map<String, dynamic> parsedMessage = jsonDecode(completeJson);
 
-            // Remove processed JSON from buffer
-            buffer = buffer.substring(jsonEnd);
-
-            // Handle thread_id
+            // Check for thread ID (if the server provides it)
             if (parsedMessage['thread_id'] != null) {
               setState(() {
                 threadId = parsedMessage['thread_id'];
               });
             }
 
-            // If contains_msg is true, accumulate the message
+            // Append text if this JSON object contains a chunk of the message
             if (parsedMessage['contains_msg'] == true) {
-              accumulatedMessage += parsedMessage['message'];
+              accumulatedMessage += parsedMessage['message'] ?? '';
+              updateMessageText(lastIndex, accumulatedMessage);
 
-              setState(() {
-                _messages[lastIndex]['text'] = accumulatedMessage;
-              });
+              // If the server indicates the message is complete, mark as read
+              if (parsedMessage['is_complete'] == true) {
+                updateMessageStatus(lastIndex, 'read');
+              }
             }
 
-            // Simulate progress value update
+            // Optional: update your progress or other UI elements
             setState(() {
               progressValue = (progressValue + 10).clamp(0, 100);
             });
@@ -133,247 +528,105 @@ class _GamePageState extends State<GamePage> {
         } catch (e) {
           print('Error processing chunk: $e');
         }
-      });
+      }
     } catch (e) {
       print('Error starting chat: $e');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error starting chat: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error starting chat: $e')),
+        );
+      }
     }
   }
 
-  void _sendMessage() {
-    if (_controller.text.trim().isEmpty) {
-      return; // Prevent sending empty messages
-    }
-
-    String message = _controller.text.trim();
-
-    setState(() {
-      _messages.add({
-        'isMe': true,
-        'text': message,
-        'time': TimeOfDay.now().format(context), // Get the current time
-        'status': 'sent',
-      });
-      _controller.clear(); // Clear the input field
-    });
-
-    continueChat(message, threadId!);
-  }
 
   Future<void> continueChat(String message, String threadId) async {
-    // Implementation for continuing the chat
-  }
+    String accumulatedMessage = ''; // We'll accumulate the entire textual response here
+    String buffer = '';            // Holds partial data until we find a complete JSON object
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFE3EBE7), // Your desired background color
-            image: backgroundImage != null
-                ? DecorationImage(
-              image: backgroundImage!.image, // Use the Image's image property
-              fit: BoxFit.cover, // Adjust as needed
-            )
-                : null, // Keep the color until the image is available
-          ),
-          child: Column(
-            children: [
-              // Top bar
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                color: Colors.white.withOpacity(0.8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.chatName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            widget.movieName,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.green,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.more_vert),
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-              ),
+    try {
+      // 1. Fetch the Stream<String> from your API client
+      final Stream<String> chatStream = await apiClient.continueChat(message, threadId);
 
-              // Progress bar
-              ProgressBar(value: progressValue),
+      // 2. Add a placeholder message in the UI for the streaming response
+      setState(() {
+        _messages.add({
+          'isMe': false,
+          'text': '',            // Will be updated incrementally
+          'time': TimeOfDay.now().format(context),
+          'status': 'streaming', // Indicate that we're still receiving data
+        });
+      });
 
-              // Messages List
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  reverse: false,
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = _messages[index];
-                    final isMe = msg['isMe'] as bool;
-                    final hasText = msg.containsKey('text');
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                      child: Column(
-                        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                        children: [
-                          if (hasText)
-                            Container(
-                              constraints: BoxConstraints(
-                                maxWidth: MediaQuery.of(context).size.width * 0.7,
-                              ),
-                              padding: const EdgeInsets.all(12.0),
-                              decoration: BoxDecoration(
-                                color: isMe ? accentColor : Colors.white,
-                                borderRadius: BorderRadius.circular(16.0),
-                              ),
-                              child: Text(
-                                msg['text'],
-                                style: TextStyle(
-                                  color: isMe ? Colors.white : Colors.black,
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 4),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                msg['time'],
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                              ),
-                              const SizedBox(width: 4),
-                              if (isMe && msg['status'] == 'read') ...[
-                                Icon(Icons.check, size: 14, color: Colors.grey),
-                                Icon(Icons.check, size: 14, color: Colors.grey),
-                              ],
-                            ],
-                          )
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
+      final int lastIndex = _messages.length - 1;
+      _scrollToBottom();
 
-              // Bottom input bar
-              Container(
-                color: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () {},
-                    ),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(24.0),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _controller,
-                                decoration: const InputDecoration(
-                                  hintText: 'Write a message',
-                                  border: InputBorder.none,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.emoji_emotions_outlined),
-                              onPressed: () {},
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.send),
-                      onPressed: _sendMessage,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+      // 3. Listen to the stream using `await for` so we can handle partial chunks
+      await for (final newChunk in chatStream) {
+        if (!mounted) return;  // In case the widget was disposed
 
+        try {
+          // a) Accumulate new chunk into buffer
+          buffer += newChunk;
 
+          // b) Keep parsing as long as we find a '}' in the buffer
+          //    (indicating a potentially complete JSON object)
+          while (true) {
+            // Find the first occurrence of '}'
+            final jsonEnd = buffer.indexOf('}');
+            if (jsonEnd == -1) {
+              // No closing brace yet -> not enough data to form a valid JSON object
+              break;
+            }
 
-class ProgressBar extends StatelessWidget {
-  final double value;
+            // Extract the substring from start to the closing brace
+            final completeJson = buffer.substring(0, jsonEnd + 1);
+            // Remove that portion from the buffer
+            buffer = buffer.substring(jsonEnd + 1);
 
-  const ProgressBar({Key? key, required this.value}) : super(key: key);
+            // Attempt to parse the complete JSON object
+            final Map<String, dynamic> parsedMessage = jsonDecode(completeJson);
 
-  @override
-  Widget build(BuildContext context) {
-    Color progressColor;
+            // If `done` is false, we're still receiving partial text
+            if (parsedMessage['done'] == false) {
+              // Append this partial text to our accumulated message
+              accumulatedMessage += parsedMessage['message'] ?? '';
 
-    if (value < 33) {
-      progressColor = Colors.red;
-    } else if (value < 66) {
-      progressColor = Colors.yellow;
-    } else {
-      progressColor = Colors.green;
+              // Update the message bubble
+              updateMessageText(lastIndex, accumulatedMessage);
+
+            } else if (parsedMessage['done'] == true) {
+              // If `done` is true, it's the final chunk for this message
+              // (Optionally append any final piece of text, if provided)
+              accumulatedMessage += parsedMessage['message'] ?? '';
+              updateMessageText(lastIndex, accumulatedMessage);
+
+              // Mark it read (or finished)
+              updateMessageStatus(lastIndex, 'read');
+            }
+
+            // If you want, update the progress bar or any other UI element
+            setState(() {
+              progressValue = (progressValue + 10).clamp(0, 100);
+            });
+
+            // Scroll down after each partial update
+            _scrollToBottom();
+          }
+        } catch (e) {
+          // If there's an error parsing this chunk, log it
+          print('Error processing chunk: $e');
+        }
+      }
+
+    } catch (e) {
+      print('Error continuing chat: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error continuing chat: $e')),
+        );
+      }
     }
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: SizedBox(
-              height: 16.0, // Adjust this value to make the bar thicker or thinner
-              child: LinearProgressIndicator(
-                value: value / 100,
-                backgroundColor: Colors.grey.shade300,
-                valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8.0), // Spacing between bar and percentage text
-          Text(
-            "${value.toStringAsFixed(0)}%", // Format percentage text
-            style: const TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
   }
 }
-

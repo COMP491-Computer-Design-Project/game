@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:game/client/api_client.dart';
 import 'package:game/register.dart';
+import 'package:game/theme/theme.dart';
 
 import 'home.dart';
 
@@ -27,279 +28,269 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Adjust this background color to match your design
-    final backgroundColor = const Color(0xFFE3EBE7); // Example color
-    final accentColor = const Color(0xFFE2543E); // Example accent color
-
     return Scaffold(
-      backgroundColor: backgroundColor,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            // Helps if the keyboard is open
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo and title
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(width: 8),
-                      Text(
-                        'chatflow',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.brown, // adjust color as needed
-                        ),
+      body: Container(
+        decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingMedium),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Logo
+                    Image.asset(
+                      'assets/logo.png',
+                      height: 200,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(height: AppTheme.paddingLarge),
+
+                    // Welcome text
+                    ShaderMask(
+                      shaderCallback: (bounds) => AppTheme.accentGradient.createShader(bounds),
+                      child: Text(
+                        'Welcome Back!',
+                        style: AppTheme.headingStyle,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Illustration
-                  Image.asset(
-                    'assets/logo.jpg',
-                    height: 200,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Welcome text
-                  const Text(
-                    'Welcome Back!',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: AppTheme.paddingLarge),
 
-                  // Toggle between Email and Phone
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          offset: const Offset(0, 2),
-                          blurRadius: 4,
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Email Toggle
-                        InkWell(
-                          onTap: () {
+                    // Toggle between Email and Phone
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white10,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildToggleButton('Email', isEmailSelected, () {
                             setState(() {
                               isEmailSelected = true;
                               _emailOrPhoneController.clear();
                             });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isEmailSelected ? Colors.white : Colors.transparent,
-                              borderRadius: BorderRadius.circular(24.0),
-                            ),
-                            child: Text(
-                              'Email',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: isEmailSelected ? Colors.black : Colors.grey,
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Phone Toggle
-                        InkWell(
-                          onTap: () {
+                          }),
+                          _buildToggleButton('Phone', !isEmailSelected, () {
                             setState(() {
                               isEmailSelected = false;
                               _emailOrPhoneController.clear();
                             });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: !isEmailSelected ? Colors.white : Colors.transparent,
-                              borderRadius: BorderRadius.circular(24.0),
+                          }),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.paddingLarge),
+
+                    // Email/Phone Field
+                    _buildInputField(
+                      _emailOrPhoneController,
+                      isEmailSelected ? 'Email' : 'Phone',
+                      keyboardType: isEmailSelected
+                          ? TextInputType.emailAddress
+                          : TextInputType.phone,
+                      prefixIcon: Icons.email_outlined,
+                    ),
+                    const SizedBox(height: AppTheme.paddingSmall),
+
+                    // Password Field
+                    _buildPasswordField(
+                      _passwordController,
+                      'Password',
+                      isVisible: isPasswordVisible,
+                      onToggleVisibility: () {
+                        setState(() => isPasswordVisible = !isPasswordVisible);
+                      },
+                    ),
+                    const SizedBox(height: AppTheme.paddingSmall),
+
+                    // Forgot Password
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          // Handle forgot password
+                        },
+                        child: ShaderMask(
+                          shaderCallback: (bounds) => 
+                              AppTheme.accentGradient.createShader(bounds),
+                          child: const Text(
+                            'Forgot Password',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
                             ),
-                            child: Text(
-                              'Phone',
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.paddingLarge),
+
+                    // Continue Button
+                    Container(
+                      decoration: AppTheme.buttonBoxDecoration,
+                      child: ElevatedButton(
+                        style: AppTheme.buttonStyle,
+                        onPressed: _handleLogin,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('Continue', style: AppTheme.buttonTextStyle),
+                            const SizedBox(width: AppTheme.paddingSmall),
+                            const Icon(Icons.arrow_forward, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.paddingSmall),
+
+                    // Sign Up Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Don't have an account? ",
+                            style: AppTheme.bodyStyle),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const RegisterPage(),
+                              ),
+                            );
+                          },
+                          child: ShaderMask(
+                            shaderCallback: (bounds) => 
+                                AppTheme.accentGradient.createShader(bounds),
+                            child: const Text(
+                              'Sign Up',
                               style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: !isEmailSelected ? Colors.black : Colors.grey,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Email or Phone Field
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24.0),
-                    ),
-                    child: TextField(
-                      controller: _emailOrPhoneController,
-                      keyboardType: isEmailSelected
-                          ? TextInputType.emailAddress
-                          : TextInputType.phone,
-                      decoration: InputDecoration(
-                        hintText: isEmailSelected ? 'Email' : 'Phone',
-                        prefixIcon: const Icon(Icons.email_outlined),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Password Field
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24.0),
-                    ),
-                    child: TextField(
-                      controller: _passwordController,
-                      obscureText: !isPasswordVisible,
-                      decoration: InputDecoration(
-                        hintText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: InkWell(
-                          onTap: () {
-                            setState(() {
-                              isPasswordVisible = !isPasswordVisible;
-                            });
-                          },
-                          child: Icon(
-                            isPasswordVisible
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Forgot Password
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        // Handle forgot password action
-                      },
-                      child: const Text(
-                        'Forgot Password',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Continue Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accentColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24.0),
-                        ),
-                        elevation: 2,
-                      ),
-                      onPressed: () async {
-                        try {
-                          final emailOrPhone = _emailOrPhoneController.text;
-                          final password = _passwordController.text;
-
-                          final response = await apiClient.login(emailOrPhone, password);
-                          if(response){
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
-                          }
-
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Login failed: $e')),
-                          );
-                        }
-                      },
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Continue',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Icon(
-                            Icons.arrow_forward,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Sign Up Link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Don't have an account? ",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          // Navigate to SignUpPage
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const RegisterPage()),
-                          );
-                        },
-                        child: Text(
-                          'Sign Up',
-                          style: TextStyle(
-                            color: accentColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 32),
-                ],
+                    const SizedBox(height: AppTheme.paddingLarge),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildToggleButton(String text, bool isSelected, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.paddingSmall,
+          vertical: AppTheme.paddingSmall,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white10 : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : Colors.white60,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputField(
+    TextEditingController controller,
+    String hint, {
+    TextInputType? keyboardType,
+    IconData? prefixIcon,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white10,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.white60),
+          prefixIcon: prefixIcon != null
+              ? Icon(prefixIcon, color: Colors.white60)
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.paddingSmall,
+            vertical: AppTheme.paddingSmall,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField(
+    TextEditingController controller,
+    String hint, {
+    required bool isVisible,
+    required VoidCallback onToggleVisibility,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white10,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: !isVisible,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.white60),
+          prefixIcon: const Icon(Icons.lock_outline, color: Colors.white60),
+          suffixIcon: InkWell(
+            onTap: onToggleVisibility,
+            child: Icon(
+              isVisible ? Icons.visibility : Icons.visibility_off,
+              color: Colors.white60,
+            ),
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.paddingSmall,
+            vertical: AppTheme.paddingSmall,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleLogin() async {
+    try {
+      final emailOrPhone = _emailOrPhoneController.text;
+      final password = _passwordController.text;
+
+      final response = await apiClient.login(emailOrPhone, password);
+      if (response) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed: $e')),
+      );
+    }
   }
 }

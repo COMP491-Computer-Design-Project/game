@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import '../model/user_stats.dart';
+
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
   String? _authToken;
@@ -91,23 +93,24 @@ class ApiClient {
 
   Future<Stream<String>> startChat(Map<String, dynamic> requestBody) async {
     final uri = Uri.parse('$baseUrl/api/chat/start');
-    print(_headers);
-    print(requestBody);
 
-    final response = await http.post(
-      uri,
-      headers: _headers,
-      body: jsonEncode(requestBody),
-    );
+    // Construct a Request manually
+    final request = http.Request('POST', uri)
+      ..headers.addAll(_headers)
+      ..body = jsonEncode(requestBody);
 
+    // Send the request to get a streamed response
+    final streamedResponse = await http.Client().send(request);
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      // Assuming the server sends a stream of text
-      return Stream.value(response.body); // Replace this with actual stream handling
+    if (streamedResponse.statusCode >= 200 && streamedResponse.statusCode < 300) {
+      // Transform the streamed byte response into a Stream of text
+      return streamedResponse.stream.transform(utf8.decoder);
     } else {
-      final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+      // On error, read the entire response as string to parse the error message
+      final responseBody = await streamedResponse.stream.bytesToString();
+      final body = responseBody.isNotEmpty ? jsonDecode(responseBody) : {};
       throw ApiException(
-        statusCode: response.statusCode,
+        statusCode: streamedResponse.statusCode,
         message: body['message'] ?? 'An unknown error occurred',
         details: body,
       );
@@ -117,19 +120,40 @@ class ApiClient {
 
   Future<Stream<String>> continueChat(String message, String threadId) async {
     final uri = Uri.parse('$baseUrl/api/chat/$threadId/continue');
-    final requestBody = jsonEncode({
-      'message': message,
-    });
+    final requestBody = jsonEncode({'message': message});
 
-    final response = await http.post(
+    final request = http.Request('POST', uri)
+      ..headers.addAll(_headers)
+      ..body = requestBody;
+
+    final streamedResponse = await http.Client().send(request);
+
+    if (streamedResponse.statusCode >= 200 && streamedResponse.statusCode < 300) {
+      // Convert the byte stream to a string stream
+      return streamedResponse.stream
+          .transform(utf8.decoder); // => Stream<String>
+    } else {
+      final responseBody = await streamedResponse.stream.bytesToString();
+      final body = responseBody.isNotEmpty ? jsonDecode(responseBody) : {};
+      throw ApiException(
+        statusCode: streamedResponse.statusCode,
+        message: body['message'] ?? 'An unknown error occurred',
+        details: body,
+      );
+    }
+  }
+
+
+  Future<UserStats> getHomePageStats() async {
+    final uri = Uri.parse('$baseUrl/api/stats');
+    final response = await http.get(
       uri,
       headers: _headers,
-      body: requestBody,
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      // Check if the API returns a stream-like response (chunked or line-delimited JSON)
-      return Stream.value(response.body);
+      final json = jsonDecode(response.body);
+      return UserStats.fromJson(json);
     } else {
       final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
       throw ApiException(

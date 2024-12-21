@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'login.dart';
+import 'theme/theme.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({Key? key}) : super(key: key);
@@ -8,72 +9,75 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
+      body: Container(
+        decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
+        child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Illustration / Image
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                       Image.asset(
-                        'assets/logo.png',
-                         height: 250,
-                       ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Welcome to ChatFlow',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingMedium),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Game Logo
+                        Hero(
+                          tag: 'gamelogo',
+                          child: Image.asset(
+                            'assets/logo.png',
+                            height: 200,
+                          ),
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Chat easily with friends using ChatFlow, '
-                        'your go-to platform for seamless conversations.',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
+                        const SizedBox(height: AppTheme.paddingLarge),
+                        ShaderMask(
+                          shaderCallback: (bounds) => AppTheme.accentGradient.createShader(bounds),
+                          child: Text(
+                            'Epic Adventure Awaits',
+                            style: AppTheme.headingStyle,
+                            textAlign: TextAlign.center,
+                          ),
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                        const SizedBox(height: AppTheme.paddingSmall),
+                        Text(
+                          'Welcome to the ultimate text-based adventure! In this game, you will engage in conversations with LLMs from various iconic movies. ',
+                          style: AppTheme.bodyStyle,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: AppTheme.paddingSmall),
+                        Text(
+                          'Explore captivating narratives, make choices that shape your journey, and work towards achieving your ultimate goal!',
+                          style: AppTheme.bodyStyle,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
 
-                // Get Started Button
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 32.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE2543E), // Adjust to match your design
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
+
+                  // Start Adventure Button
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppTheme.paddingLarge),
+                    child: Container(
+                      decoration: AppTheme.buttonBoxDecoration,
+                      child: ElevatedButton(
+                        style: AppTheme.buttonStyle,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const LoginPage()),
+                          );
+                        },
+                        child: Text(
+                          'START ADVENTURE',
+                          style: AppTheme.buttonTextStyle,
                         ),
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const LoginPage()),
-                        );
-                      },
-                      child: const Text(
-                        'Get Started',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

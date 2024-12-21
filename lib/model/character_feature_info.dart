@@ -1,8 +1,11 @@
+import 'package:flutter/material.dart';
+
 class CharacterFeatureInfo {
   final String name;
   final String key;
   final String image;
   final String description;
+  final IconData icon;
   double currentValue;
 
   CharacterFeatureInfo({
@@ -10,79 +13,90 @@ class CharacterFeatureInfo {
     required this.key,
     required this.image,
     required this.description,
+    required this.icon,
     required this.currentValue,
   });
 }
 
 final List<CharacterFeatureInfo> characterFeatures = [
   CharacterFeatureInfo(
-    name: "Güç",
+    name: "Strength",
     key: 'strength',
     image: "power.png",
-    description: "Fiziksel kuvvet, dayanıklılık gerektiren eylemler.",
+    description: "Physical power and ability to perform feats of strength",
+    icon: Icons.fitness_center,
     currentValue: 3.0,
   ),
   CharacterFeatureInfo(
-    name: "Hız",
+    name: "Speed",
     key: 'speed',
     image: "speed.png",
-    description: "Çeviklik ve hız.",
+    description: "Agility and movement capabilities",
+    icon: Icons.speed,
     currentValue: 3.0,
   ),
   CharacterFeatureInfo(
-    name: "Dayanıklılık",
+    name: "Endurance",
     key: 'endurance',
     image: "stamina.png",
-    description: "Zorluklara karşı direnç.",
+    description: "Ability to withstand physical stress and fatigue",
+    icon: Icons.battery_charging_full,
     currentValue: 3.0,
   ),
   CharacterFeatureInfo(
-    name: "Refleks",
+    name: "Reflexes",
     key: 'reflexes',
     image: "reflex.png",
-    description: "Ani olaylara hızlı tepki verme yeteneği.",
+    description: "Quick reaction time and combat awareness",
+    icon: Icons.flash_on,
     currentValue: 3.0,
   ),
   CharacterFeatureInfo(
-    name: "Görüş",
+    name: "Vision",
     key: 'vision',
     image: "vision.png",
-    description: "Keskin gözlem yeteneği.",
+    description: "Perception and attention to detail",
+    icon: Icons.visibility,
     currentValue: 3.0,
   ),
   CharacterFeatureInfo(
-    name: "Zeka",
+    name: "Intelligence",
     key: 'intelligence',
     image: "intelligence.png",
-    description: "Bilmece çözmek, bilimsel ekipman kullanmak.",
+    description: "Problem-solving and analytical thinking",
+    icon: Icons.psychology,
     currentValue: 3.0,
   ),
   CharacterFeatureInfo(
-    name: "Strateji",
+    name: "Strategy",
     key: 'strategy',
     image: "strategy.png",
-    description: "Karmaşık olayları planlama ve çözme.",
+    description: "Tactical planning and decision making",
+    icon: Icons.architecture,
     currentValue: 3.0,
   ),
   CharacterFeatureInfo(
-    name: "Karizma",
+    name: "Charisma",
     key: 'charisma',
     image: "charisma.png",
-    description: "İkna ve iletişim gücü.",
+    description: "Social influence and leadership ability",
+    icon: Icons.record_voice_over,
     currentValue: 3.0,
   ),
   CharacterFeatureInfo(
-    name: "Sezgi",
+    name: "Intuition",
     key: 'intuition',
     image: "intuition.png",
-    description: "Tehlikeyi önceden tahmin etme.",
+    description: "Gut feeling and ability to sense danger",
+    icon: Icons.lightbulb,
     currentValue: 3.0,
   ),
   CharacterFeatureInfo(
-    name: "Odaklanma",
+    name: "Focus",
     key: 'focus',
     image: "focus.png",
-    description: "Zihinsel dayanıklılık.",
+    description: "Mental concentration and willpower",
+    icon: Icons.center_focus_strong,
     currentValue: 3.0,
   ),
 ];
