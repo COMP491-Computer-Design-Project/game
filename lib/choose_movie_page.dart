@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:game/character_creation_page.dart';
 import 'package:game/theme/theme.dart';
 
+import 'client/api_client.dart';
+import 'model/movie_data.dart';
+
 class ChooseMoviePage extends StatefulWidget {
   const ChooseMoviePage({Key? key}) : super(key: key);
 
@@ -13,6 +16,14 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
   String selectedCategory = 'All';
   String searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final apiClient = ApiClient();
+  late Future<List<MovieData>> movieDataFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    movieDataFuture = _fetchMovieData();
+  }
 
   @override
   void dispose() {
@@ -20,8 +31,25 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
     super.dispose();
   }
 
-  List<MovieData> get filteredMovies {
-    return movieData.where((movie) {
+  Future<List<MovieData>> _fetchMovieData() async {
+    try {
+      return await apiClient.getMovies();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load movies: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      // Return dummy data if API call fails
+      return dummyMovieData;
+    }
+  }
+
+  List<MovieData> getFilteredMovies(List<MovieData> movies) {
+    return movies.where((movie) {
       final matchesSearch = movie.title.toLowerCase().contains(searchQuery.toLowerCase()) ||
           movie.description.toLowerCase().contains(searchQuery.toLowerCase());
       final matchesCategory = selectedCategory == 'All' || movie.genre == selectedCategory;
@@ -35,113 +63,129 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
       body: Container(
         decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
         child: SafeArea(
-          child: Column(
-            children: [
-              // Custom App Bar
-              Padding(
-                padding: const EdgeInsets.all(AppTheme.paddingMedium),
-                child: Row(
-                  children: [
-                    InkWell(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white10,
-                          borderRadius: BorderRadius.circular(12),
+          child: FutureBuilder<List<MovieData>>(
+            future: movieDataFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
+
+              final movies = snapshot.data ?? [];
+              final filteredMovies = getFilteredMovies(movies);
+
+              return Column(
+                children: [
+                  // Custom App Bar
+                  Padding(
+                    padding: const EdgeInsets.all(AppTheme.paddingMedium),
+                    child: Row(
+                      children: [
+                        InkWell(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white10,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
+                        const SizedBox(width: AppTheme.paddingMedium),
+                        ShaderMask(
+                          shaderCallback: (bounds) =>
+                              AppTheme.accentGradient.createShader(bounds),
+                          child: const Text(
+                            'Choose Your Story',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Search Bar
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.paddingMedium,
+                      vertical: AppTheme.paddingSmall,
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white10,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        style: const TextStyle(color: Colors.white),
+                        onChanged: (value) {
+                          setState(() {
+                            searchQuery = value;
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          hintText: 'Search stories...',
+                          hintStyle: TextStyle(color: Colors.white60),
+                          prefixIcon: Icon(Icons.search, color: Colors.white60),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: AppTheme.paddingSmall,
+                            vertical: AppTheme.paddingSmall,
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: AppTheme.paddingMedium),
-                    ShaderMask(
-                      shaderCallback: (bounds) =>
-                          AppTheme.accentGradient.createShader(bounds),
-                      child: const Text(
-                        'Choose Your Story',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Search Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.paddingMedium,
-                  vertical: AppTheme.paddingSmall,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white10,
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: TextField(
-                    controller: _searchController,
-                    style: const TextStyle(color: Colors.white),
-                    onChanged: (value) {
-                      setState(() {
-                        searchQuery = value;
-                      });
-                    },
-                    decoration: const InputDecoration(
-                      hintText: 'Search stories...',
-                      hintStyle: TextStyle(color: Colors.white60),
-                      prefixIcon: Icon(Icons.search, color: Colors.white60),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: AppTheme.paddingSmall,
-                        vertical: AppTheme.paddingSmall,
+
+                  // Categories
+                  SizedBox(
+                    height: 50,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.paddingMedium,
                       ),
+                      children: [
+                        _buildCategoryChip('All', selectedCategory == 'All'),
+                        _buildCategoryChip('Action', selectedCategory == 'Action'),
+                        _buildCategoryChip('Adventure', selectedCategory == 'Adventure'),
+                        _buildCategoryChip('Drama', selectedCategory == 'Drama'),
+                        _buildCategoryChip('Sci-Fi', selectedCategory == 'Sci-Fi'),
+                      ],
                     ),
                   ),
-                ),
-              ),
 
-              // Categories
-              SizedBox(
-                height: 50,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.paddingMedium,
+                  // Movie Grid
+                  Expanded(
+                    child: GridView.builder(
+                      padding: const EdgeInsets.all(AppTheme.paddingMedium),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.7,
+                        crossAxisSpacing: AppTheme.paddingSmall,
+                        mainAxisSpacing: AppTheme.paddingSmall,
+                      ),
+                      itemCount: filteredMovies.length,
+                      itemBuilder: (context, index) {
+                        final movie = filteredMovies[index];
+                        return _buildMovieCard(context, movie);
+                      },
+                    ),
                   ),
-                  children: [
-                    _buildCategoryChip('All', selectedCategory == 'All'),
-                    _buildCategoryChip('Action', selectedCategory == 'Action'),
-                    _buildCategoryChip('Adventure', selectedCategory == 'Adventure'),
-                    _buildCategoryChip('Drama', selectedCategory == 'Drama'),
-                    _buildCategoryChip('Sci-Fi', selectedCategory == 'Sci-Fi'),
-                  ],
-                ),
-              ),
-
-              // Movie Grid
-              Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(AppTheme.paddingMedium),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.7,
-                    crossAxisSpacing: AppTheme.paddingSmall,
-                    mainAxisSpacing: AppTheme.paddingSmall,
-                  ),
-                  itemCount: filteredMovies.length,
-                  itemBuilder: (context, index) {
-                    final movie = filteredMovies[index];
-                    return _buildMovieCard(context, movie);
-                  },
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -288,25 +332,7 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
   }
 }
 
-class MovieData {
-  final String title;
-  final String description;
-  final String imagePath;
-  final String genre;
-  final double rating;
-  final String movieId;
-
-  MovieData({
-    required this.title,
-    required this.description,
-    required this.imagePath,
-    required this.genre,
-    required this.rating,
-    required this.movieId,
-  });
-}
-
-final List<MovieData> movieData = [
+final List<MovieData> dummyMovieData = [
   MovieData(
     title: "The Dark Knight",
     description: "When the menace known as the Joker emerges from his mysterious past, he wreaks havoc and chaos on the people of Gotham. The Dark Knight must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
@@ -338,21 +364,5 @@ final List<MovieData> movieData = [
     genre: "Sci-Fi",
     rating: 4.8,
     movieId: "matrix",
-  ),
-  MovieData(
-    title: "Inception",
-    description: "A skilled thief with the rare ability to steal secrets from people's minds during their dreams must plant an idea into a CEO's mind. A mind-bending journey through layers of dreams within dreams.",
-    imagePath: "assets/images/inception.jpg",
-    genre: "Sci-Fi",
-    rating: 4.8,
-    movieId: "inception",
-  ),
-  MovieData(
-    title: "The Shawshank Redemption",
-    description: "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency. A powerful story of hope and perseverance.",
-    imagePath: "assets/images/shawshank.jpg",
-    genre: "Drama",
-    rating: 4.9,
-    movieId: "shawshank",
   ),
 ];

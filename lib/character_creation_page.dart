@@ -165,6 +165,7 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                     const SizedBox(height: AppTheme.paddingMedium),
 
                     // Load Saved Character Button
+                    /*
                     Container(
                       width: double.infinity,
                       margin: const EdgeInsets.symmetric(
@@ -197,6 +198,8 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                         ),
                       ),
                     ),
+
+                     */
 
                     // Character Features
                     ...characterFeatures.map((feature) {
@@ -231,6 +234,7 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                         const SizedBox(height: AppTheme.paddingSmall),
 
                         // Save Character Button
+                        /*
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white10,
@@ -249,6 +253,7 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                             ),
                           ),
                         ),
+                       */
                       ],
                     ),
                   ],
@@ -283,6 +288,7 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
       context,
       MaterialPageRoute(
         builder: (context) => GamePage(
+          characterName: _characterNameController.text,
           movieName: widget.movieName,
           movieId: widget.movieId,
           chatName: widget.chatName,

@@ -1,9 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:game/theme/theme.dart';
-import 'package:game/game_page.dart';
+import 'package:game/client/api_client.dart';
 
-class SavedGamesPage extends StatelessWidget {
+import 'model/saved_game.dart';
+
+class SavedGamesPage extends StatefulWidget {
   const SavedGamesPage({Key? key}) : super(key: key);
+
+  @override
+  State<SavedGamesPage> createState() => _SavedGamesPageState();
+}
+
+class _SavedGamesPageState extends State<SavedGamesPage> {
+  List<SavedGame> _savedGames = [];
+  bool _isLoading = true;
+  final apiClient = ApiClient();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedGames();
+  }
+
+  Future<void> _loadSavedGames() async {
+    try {
+      final chats = await apiClient.getUserChats();
+      setState(() {
+        _savedGames = chats;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      // You might want to show an error message here
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,14 +105,23 @@ class SavedGamesPage extends StatelessWidget {
 
               // Saved Games List
               Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(AppTheme.paddingMedium),
-                  itemCount: savedGames.length,
-                  itemBuilder: (context, index) {
-                    final game = savedGames[index];
-                    return _buildSavedGameCard(context, game);
-                  },
-                ),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _savedGames.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'No saved games found',
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(AppTheme.paddingMedium),
+                            itemCount: _savedGames.length,
+                            itemBuilder: (context, index) {
+                              final game = _savedGames[index];
+                              return _buildSavedGameCard(context, game);
+                            },
+                          ),
               ),
             ],
           ),
@@ -178,65 +217,3 @@ class SavedGamesPage extends StatelessWidget {
   }
 }
 
-class SavedGame {
-  final String movieName;
-  final String chatName;
-  final String lastPlayed;
-  final int progress;
-  final Map<String, int> characterValues;
-
-  const SavedGame({
-    required this.movieName,
-    required this.chatName,
-    required this.lastPlayed,
-    required this.progress,
-    required this.characterValues,
-  });
-
-  IconData getMovieIcon() {
-    switch (movieName) {
-      case 'The Dark Knight':
-        return Icons.dark_mode;
-      case 'Avengers: Endgame':
-        return Icons.shield;
-      case 'Interstellar':
-        return Icons.rocket;
-      case 'The Matrix':
-        return Icons.computer;
-      default:
-        return Icons.movie;
-    }
-  }
-}
-
-// Placeholder saved games data
-final List<SavedGame> savedGames = [
-  SavedGame(
-    movieName: 'The Dark Knight',
-    chatName: 'dark_knight',
-    lastPlayed: '2 hours ago',
-    progress: 75,
-    characterValues: {'strength': 7, 'intelligence': 8, 'speed': 6},
-  ),
-  SavedGame(
-    movieName: 'Interstellar',
-    chatName: 'interstellar',
-    lastPlayed: 'Yesterday',
-    progress: 45,
-    characterValues: {'intelligence': 9, 'endurance': 7, 'focus': 8},
-  ),
-  SavedGame(
-    movieName: 'The Matrix',
-    chatName: 'matrix',
-    lastPlayed: '3 days ago',
-    progress: 90,
-    characterValues: {'reflexes': 9, 'intelligence': 8, 'speed': 8},
-  ),
-  SavedGame(
-    movieName: 'Avengers: Endgame',
-    chatName: 'endgame',
-    lastPlayed: 'Last week',
-    progress: 30,
-    characterValues: {'strength': 8, 'strategy': 7, 'charisma': 6},
-  ),
-]; 

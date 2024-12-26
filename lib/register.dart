@@ -11,7 +11,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  final TextEditingController _fullNameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -24,7 +24,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   void dispose() {
-    _fullNameController.dispose();
+    _usernameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -68,7 +68,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     const SizedBox(height: AppTheme.paddingLarge),
 
                     // Form Fields
-                    _buildInputField(_fullNameController, 'Full Name'),
+                    _buildInputField(_usernameController, 'Username'),
                     const SizedBox(height: AppTheme.paddingSmall),
                     _buildInputField(_emailController, 'Email Address',
                         keyboardType: TextInputType.emailAddress),
@@ -197,7 +197,8 @@ class _RegisterPageState extends State<RegisterPage> {
     try {
       final email = _emailController.text;
       final password = _passwordController.text;
-      final response = await apiClient.register(email, password);
+      final username = _usernameController.text;
+      final response = await apiClient.register(email, password, username);
       if (response) {
         Navigator.push(
           context,

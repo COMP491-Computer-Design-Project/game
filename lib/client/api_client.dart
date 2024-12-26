@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'package:game/saved_games_page.dart';
 import 'package:http/http.dart' as http;
 
+import '../model/movie_data.dart';
+import '../model/saved_game.dart';
 import '../model/user_stats.dart';
 
 class ApiClient {
@@ -57,7 +60,7 @@ class ApiClient {
     }
   }
 
-  Future<bool> register(String email, String password) async {
+  Future<bool> register(String email, String password, String username) async {
     final uri = Uri.parse('$baseUrl/auth/register');
     final response = await http.post(
       uri,
@@ -76,7 +79,7 @@ class ApiClient {
         headers: _headers,
         body: jsonEncode({
           'email': email,
-          'password': password,
+          'username': username,
         }),
       );
       return true;
@@ -145,7 +148,7 @@ class ApiClient {
 
 
   Future<UserStats> getHomePageStats() async {
-    final uri = Uri.parse('$baseUrl/api/stats');
+    final uri = Uri.parse('$baseUrl/api/chat/user/statistics');
     final response = await http.get(
       uri,
       headers: _headers,
@@ -163,6 +166,67 @@ class ApiClient {
       );
     }
   }
+
+  Future<Map<String, dynamic>> getUserProfile() async {
+    final uri = Uri.parse('$baseUrl/api/users');
+    final response = await http.get(
+      uri,
+      headers: _headers,
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final json = jsonDecode(response.body);
+      return json;
+    } else {
+      final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+      throw ApiException(
+        statusCode: response.statusCode,
+        message: body['message'] ?? 'An unknown error occurred',
+        details: body,
+      );
+    }
+  }
+
+  Future<List<SavedGame>> getUserChats() async {
+    final uri = Uri.parse('$baseUrl/api/chat/user/chats');
+    final response = await http.get(
+      uri,
+      headers: _headers,
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final json = jsonDecode(response.body);
+      return json as List<SavedGame>;
+    } else {
+      final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+      throw ApiException(
+        statusCode: response.statusCode,
+        message: body['message'] ?? 'An unknown error occurred',
+        details: body,
+      );
+    }
+  }
+
+  Future<List<MovieData>> getMovies() async {
+    final uri = Uri.parse('$baseUrl/api/movies');
+    final response = await http.get(
+      uri,
+      headers: _headers,
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final json = jsonDecode(response.body);
+      return json as List<MovieData>;
+    } else {
+      final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+      throw ApiException(
+        statusCode: response.statusCode,
+        message: body['message'] ?? 'An unknown error occurred',
+        details: body,
+      );
+    }
+  }
+
 
 
 }

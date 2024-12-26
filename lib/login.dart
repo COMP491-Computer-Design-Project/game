@@ -13,15 +13,14 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  bool isEmailSelected = true;
   bool isPasswordVisible = false;
-  final TextEditingController _emailOrPhoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final apiClient = ApiClient();
 
   @override
   void dispose() {
-    _emailOrPhoneController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -57,39 +56,11 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: AppTheme.paddingLarge),
 
-                    // Toggle between Email and Phone
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white10,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildToggleButton('Email', isEmailSelected, () {
-                            setState(() {
-                              isEmailSelected = true;
-                              _emailOrPhoneController.clear();
-                            });
-                          }),
-                          _buildToggleButton('Phone', !isEmailSelected, () {
-                            setState(() {
-                              isEmailSelected = false;
-                              _emailOrPhoneController.clear();
-                            });
-                          }),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppTheme.paddingLarge),
-
-                    // Email/Phone Field
+                    // Email Field
                     _buildInputField(
-                      _emailOrPhoneController,
-                      isEmailSelected ? 'Email' : 'Phone',
-                      keyboardType: isEmailSelected
-                          ? TextInputType.emailAddress
-                          : TextInputType.phone,
+                      _emailController,
+                      'Email',
+                      keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_outlined,
                     ),
                     const SizedBox(height: AppTheme.paddingSmall),
@@ -185,29 +156,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildToggleButton(String text, bool isSelected, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.paddingSmall,
-          vertical: AppTheme.paddingSmall,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white10 : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : Colors.white60,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildInputField(
     TextEditingController controller,
     String hint, {
@@ -277,10 +225,10 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _handleLogin() async {
     try {
-      final emailOrPhone = _emailOrPhoneController.text;
+      final email = _emailController.text;
       final password = _passwordController.text;
 
-      final response = await apiClient.login(emailOrPhone, password);
+      final response = await apiClient.login(email, password);
       if (response) {
         Navigator.push(
           context,

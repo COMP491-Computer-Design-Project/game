@@ -9,6 +9,8 @@ class GamePage extends StatefulWidget {
   final String chatName;
   final String movieId;
   final Map<String, int> characterValues;
+  final String characterName;
+
 
   const GamePage({
     Key? key,
@@ -16,6 +18,7 @@ class GamePage extends StatefulWidget {
     required this.chatName,
     required this.movieId,
     required this.characterValues,
+    required this.characterName
   }) : super(key: key);
 
   @override
@@ -31,11 +34,16 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
   
   Image? backgroundImage;
   String? threadId;
-  double progressValue = 50.0;
   bool isTyping = false;
+  bool isLoading = false;
   late AnimationController _fadeController;
   late AnimationController _slideController;
   late Animation<double> _backgroundFadeAnimation;
+  int healthPoint = 100;
+  int staminaPoint = 100;
+  int progressValue = 50;
+
+
 
   // Callback function to update message text
   void updateMessageText(int index, String text) {
@@ -133,6 +141,9 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                 child: _buildMessagesList(),
               ),
 
+              // Loading Bar
+              if (isLoading) _buildLoadingBar(),
+
               // Input Bar
               _buildInputBar(),
             ],
@@ -188,8 +199,8 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStatChip(Icons.favorite, "Health", "100"),
-              _buildStatChip(Icons.flash_on, "Energy", "75"),
+              _buildStatChip(Icons.favorite, "Health", healthPoint.toString()),
+              _buildStatChip(Icons.flash_on, "Energy", staminaPoint.toString()),
               _buildStatChip(Icons.star, "Experience", "240"),
             ],
           ),
@@ -207,7 +218,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                 ),
               ),
               Text(
-                '${progressValue.toInt()}%',
+                '$progressValue%',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
@@ -360,6 +371,16 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildLoadingBar() {
+    return Padding(
+      padding: const EdgeInsets.all(AppTheme.paddingSmall),
+      child: LinearProgressIndicator(
+        backgroundColor: Colors.white10,
+        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accent),
+      ),
+    );
+  }
+
   Widget _buildMenuButton() {
     return IconButton(
       icon: const Icon(Icons.pause, color: Colors.white),
@@ -458,6 +479,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
 
     // Prepare your request body
     final Map<String, dynamic> requestBody = {
+      'characterName': widget.characterName,
       'movieName': widget.movieId,
       'chatName': widget.chatName,
       'message': message,
@@ -465,8 +487,16 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     };
 
     try {
+      setState(() {
+        isLoading = true;
+      });
+
       // 1. Request a real streaming response from the API
       final Stream<String> chatStream = await apiClient.startChat(requestBody);
+
+      setState(() {
+        isLoading = false;
+      });
 
       // 2. Create a placeholder in the UI for the incoming message
       setState(() {
@@ -484,6 +514,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
       await for (final newChunk in chatStream) {
         try {
           // Append chunk to our buffer
+          print(newChunk);
           buffer += newChunk;
 
           // While we can find a closing brace, parse out one complete JSON object at a time
@@ -501,12 +532,22 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
 
             // Attempt to parse
             final Map<String, dynamic> parsedMessage = jsonDecode(completeJson);
-
+            print(parsedMessage);
             // Check for thread ID (if the server provides it)
             if (parsedMessage['thread_id'] != null) {
               setState(() {
                 threadId = parsedMessage['thread_id'];
               });
+            }
+
+            if(parsedMessage.keys.contains('isMeta')){
+              if (parsedMessage['isMeta'] == true) {
+                setState(() {
+                  progressValue = parsedMessage['progress_level'];
+                  healthPoint = parsedMessage['hp'];
+                  staminaPoint = parsedMessage['sp'];
+                });
+              }
             }
 
             // Append text if this JSON object contains a chunk of the message
@@ -520,10 +561,6 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
               }
             }
 
-            // Optional: update your progress or other UI elements
-            setState(() {
-              progressValue = (progressValue + 10).clamp(0, 100);
-            });
           }
         } catch (e) {
           print('Error processing chunk: $e');
@@ -531,6 +568,10 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
       }
     } catch (e) {
       print('Error starting chat: $e');
+
+      setState(() {
+        isLoading = false;
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -546,8 +587,16 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     String buffer = '';            // Holds partial data until we find a complete JSON object
 
     try {
+      setState(() {
+        isLoading = true;
+      });
+
       // 1. Fetch the Stream<String> from your API client
       final Stream<String> chatStream = await apiClient.continueChat(message, threadId);
+
+      setState(() {
+        isLoading = false;
+      });
 
       // 2. Add a placeholder message in the UI for the streaming response
       setState(() {
@@ -568,6 +617,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
 
         try {
           // a) Accumulate new chunk into buffer
+          print(newChunk);
           buffer += newChunk;
 
           // b) Keep parsing as long as we find a '}' in the buffer
@@ -588,6 +638,18 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
             // Attempt to parse the complete JSON object
             final Map<String, dynamic> parsedMessage = jsonDecode(completeJson);
 
+            print(parsedMessage);
+
+            if(parsedMessage.keys.contains('isMeta')){
+              if (parsedMessage['isMeta'] == true) {
+                setState(() {
+                  progressValue = parsedMessage['progress_level'];
+                  healthPoint = parsedMessage['hp'];
+                  staminaPoint = parsedMessage['sp'];
+                });
+              }
+            }
+
             // If `done` is false, we're still receiving partial text
             if (parsedMessage['done'] == false) {
               // Append this partial text to our accumulated message
@@ -597,21 +659,11 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
               updateMessageText(lastIndex, accumulatedMessage);
 
             } else if (parsedMessage['done'] == true) {
-              // If `done` is true, it's the final chunk for this message
-              // (Optionally append any final piece of text, if provided)
               accumulatedMessage += parsedMessage['message'] ?? '';
               updateMessageText(lastIndex, accumulatedMessage);
-
-              // Mark it read (or finished)
               updateMessageStatus(lastIndex, 'read');
             }
 
-            // If you want, update the progress bar or any other UI element
-            setState(() {
-              progressValue = (progressValue + 10).clamp(0, 100);
-            });
-
-            // Scroll down after each partial update
             _scrollToBottom();
           }
         } catch (e) {
@@ -622,6 +674,11 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
 
     } catch (e) {
       print('Error continuing chat: $e');
+
+      setState(() {
+        isLoading = false;
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error continuing chat: $e')),

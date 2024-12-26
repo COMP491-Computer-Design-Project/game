@@ -2,21 +2,27 @@ class UserStats {
   final String playerName;
   final int gameCount;
   final int maxScore;
-  final int currentStreak;
+  final int uniqueMovieCount;
+  final int level;
+  final int xp;
 
   UserStats({
     required this.playerName,
     required this.gameCount,
     required this.maxScore,
-    required this.currentStreak,
+    required this.uniqueMovieCount,
+    required this.level,
+    required this.xp,
   });
 
   factory UserStats.fromJson(Map<String, dynamic> json) {
     return UserStats(
-      playerName: json['player_name'] ?? 'Player',
-      gameCount: json['game_count'] ?? 0,
-      maxScore: json['max_score'] ?? 0,
-      currentStreak: json['current_streak'] ?? 0,
+      playerName: json['username'] ?? 'Player',
+      gameCount: json['num_games_played'] ?? 0,
+      maxScore: json['highest_score'] ?? 0,
+      uniqueMovieCount: json['num_movies_played'] ?? 0,
+      level: json['level'] ?? 0,
+      xp: json['total_score'] ?? 0,
     );
   }
 
@@ -26,7 +32,9 @@ class UserStats {
       playerName: 'Loading...',
       gameCount: 0,
       maxScore: 0,
-      currentStreak: 0,
+      uniqueMovieCount: 0,
+      level: 1,
+      xp: 1
     );
   }
 }

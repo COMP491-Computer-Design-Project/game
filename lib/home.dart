@@ -6,6 +6,8 @@ import 'package:game/theme/theme.dart';
 import 'package:game/model/user_stats.dart';
 import 'package:game/client/api_client.dart';
 import 'package:game/leaderboard_page.dart';
+import 'package:game/profile_page.dart';
+import 'package:game/quick_play_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -16,20 +18,17 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final apiClient = ApiClient();
-  UserStats? userStats;
+  late Future<UserStats> userStatsFuture;
 
   @override
   void initState() {
     super.initState();
-    _fetchUserStats();
+    userStatsFuture = _fetchUserStats();
   }
 
-  Future<void> _fetchUserStats() async {
+  Future<UserStats> _fetchUserStats() async {
     try {
-      final stats = await apiClient.getHomePageStats();
-      setState(() {
-        userStats = stats;
-      });
+      return await apiClient.getHomePageStats();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -39,6 +38,15 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       }
+      // Return dummy data if API call fails
+      return UserStats(
+        playerName: 'Guest Player',
+        gameCount: 0,
+        maxScore: 0,
+        uniqueMovieCount: 0,
+        level: 1,
+        xp: 0,
+      );
     }
   }
 
@@ -48,268 +56,288 @@ class _HomePageState extends State<HomePage> {
       body: Container(
         decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.paddingMedium),
-            child: Column(
-              children: [
-                // Header with logo and player info
-                Row(
+          child: FutureBuilder<UserStats>(
+            future: userStatsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              
+              // Use dummy data if there's an error
+              final userStats = snapshot.data ?? UserStats(
+                playerName: 'Guest Player',
+                gameCount: 0,
+                maxScore: 0,
+                uniqueMovieCount: 0,
+                level: 1,
+                xp: 0,
+              );
+              
+              return Padding(
+                padding: const EdgeInsets.all(AppTheme.paddingMedium),
+                child: Column(
                   children: [
-                    // Player Avatar
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppTheme.accent,
-                          width: 2,
+                    // Header with logo and player info
+                    Row(
+                      children: [
+                        // Player Avatar
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppTheme.accent,
+                              width: 2,
+                            ),
+                          ),
+                          child: const CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Colors.white24,
+                            backgroundImage:
+                                AssetImage('assets/images/avatar_placeholder.png'),
+                          ),
                         ),
-                      ),
-                      child: const CircleAvatar(
-                        radius: 24,
-                        backgroundColor: Colors.white24,
-                        backgroundImage:
-                            AssetImage('assets/images/avatar_placeholder.png'),
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.paddingSmall),
-                    // Player Info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Player One',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Container(
-                            width: 100,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(3),
-                              gradient: AppTheme.accentGradient,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Settings Icon
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white10,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.settings,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.paddingSmall),
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.paddingMedium,
-                    vertical: AppTheme.paddingSmall,
-                  ),
-                  padding: const EdgeInsets.all(AppTheme.paddingSmall),
-                  decoration: BoxDecoration(
-                    color: Colors.white10,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white24, width: 1),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              gradient: AppTheme.accentGradient,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.military_tech,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: AppTheme.paddingSmall),
-                          const Column(
+                        const SizedBox(width: AppTheme.paddingSmall),
+                        // Player Info
+                        Expanded(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Current Level',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              Text(
-                                'Level 15',
+                                userStats.playerName,
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 20,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Container(
+                                width: 100,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(3),
+                                  gradient: AppTheme.accentGradient,
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
                         ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.accent.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.star,
-                              color: Colors.amber,
-                              size: 16,
+                        // Leaderboard Button
+                        Container(
+                          margin: const EdgeInsets.only(right: AppTheme.paddingSmall),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white10,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LeaderboardPage(),
+                                ),
+                              );
+                            },
+                            child: const Icon(
+                              Icons.emoji_events,
+                              color: Colors.white,
                             ),
-                            SizedBox(width: 4),
-                            Text(
-                              '2,450 XP',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Game Stats Cards
-                Row(
-                  children: [
-                    _buildStatCard('Games\nPlayed', '12', Icons.games),
-                    const SizedBox(width: AppTheme.paddingSmall),
-                    _buildStatCard('High\nScore', '2850', Icons.star),
-                    const SizedBox(width: AppTheme.paddingSmall),
-                    _buildStatCard(
-                        'Current\nStreak', '3', Icons.local_fire_department),
-                  ],
-                ),
-                const SizedBox(height: AppTheme.paddingLarge),
-
-                // Game Modes Section
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ShaderMask(
-                        shaderCallback: (bounds) =>
-                            AppTheme.accentGradient.createShader(bounds),
-                        child: const Text(
-                          'Choose Your Adventure',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: AppTheme.paddingMedium),
-                      Expanded(
-                        child: GridView.count(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: AppTheme.paddingSmall,
-                          crossAxisSpacing: AppTheme.paddingSmall,
-                          children: [
-                            _buildGameModeCard(
-                              'Story Mode',
-                              Icons.movie,
-                              'Embark on an epic movie journey',
-                              () => Navigator.push(
+                        // Settings/Profile Button
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white10,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const ChooseMoviePage(),
+                                  builder: (context) => const ProfilePage(),
                                 ),
-                              ),
+                              );
+                            },
+                            child: const Icon(
+                              Icons.person,
+                              color: Colors.white,
                             ),
-                            _buildGameModeCard(
-                              'Quick Play',
-                              Icons.flash_on,
-                              'Jump into random scenarios',
-                              () {},
-                            ),
-                            _buildGameModeCard(
-                              'Continue Game',
-                              Icons.save,
-                              'Resume your last adventure',
-                              () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const SavedGamesPage(),
-                                ),
-                              ),
-                            ),
-                            _buildGameModeCard(
-                              'Multiplayer',
-                              Icons.group,
-                              'Play with friends',
-                              () {},
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppTheme.paddingMedium),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.white10,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: AppTheme.accent),
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const LeaderboardPage()),
-                      );
-                    },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.emoji_events, color: AppTheme.accent),
-                        const SizedBox(width: AppTheme.paddingSmall),
-                        const Text(
-                          'Global Leaderboard',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: AppTheme.paddingSmall),
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.paddingMedium,
+                        vertical: AppTheme.paddingSmall,
+                      ),
+                      padding: const EdgeInsets.all(AppTheme.paddingSmall),
+                      decoration: BoxDecoration(
+                        color: Colors.white10,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white24, width: 1),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  gradient: AppTheme.accentGradient,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.military_tech,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: AppTheme.paddingSmall),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Current Level',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Level ${userStats.level}',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.accent.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                  size: 16,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  '${userStats.xp} XP',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Game Stats Cards
+                    Row(
+                      children: [
+                        _buildStatCard('Games\nPlayed', userStats.gameCount.toString(), Icons.games),
+                        const SizedBox(width: AppTheme.paddingSmall),
+                        _buildStatCard('Highest\nScore', userStats.maxScore.toString(), Icons.star),
+                        const SizedBox(width: AppTheme.paddingSmall),
+                        _buildStatCard(
+                            'Movies\nPlayed', userStats.uniqueMovieCount.toString(), Icons.movie_filter_outlined),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.paddingLarge),
+
+                    // Game Modes Section
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ShaderMask(
+                            shaderCallback: (bounds) =>
+                                AppTheme.accentGradient.createShader(bounds),
+                            child: const Text(
+                              'Choose Your Adventure',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: AppTheme.paddingMedium),
+                          Expanded(
+                            child: GridView.count(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: AppTheme.paddingSmall,
+                              crossAxisSpacing: AppTheme.paddingSmall,
+                              children: [
+                                _buildGameModeCard(
+                                  'Story Mode',
+                                  Icons.movie,
+                                  'Embark on an epic movie journey',
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const ChooseMoviePage(),
+                                    ),
+                                  ),
+                                ),
+                                _buildGameModeCard(
+                                  'Quick Play',
+                                  Icons.flash_on,
+                                  'Jump into random scenarios',
+                                      () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const QuickPlayPage(),
+                                    ),
+                                  ),
+                                ),
+                                _buildGameModeCard(
+                                  'Continue Game',
+                                  Icons.save,
+                                  'Resume your last adventure',
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const SavedGamesPage(),
+                                    ),
+                                  ),
+                                ),
+                                _buildGameModeCard(
+                                  'Multiplayer',
+                                  Icons.group,
+                                  'Play with friends',
+                                  () {},
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            }
           ),
         ),
       ),
@@ -408,83 +436,6 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildStatCards() {
-    final stats = userStats ?? UserStats.loading();
-
-    return Row(
-      children: [
-        _buildStatCard(
-          'Games\nPlayed',
-          stats.gameCount.toString(),
-          Icons.games,
-        ),
-        const SizedBox(width: AppTheme.paddingSmall),
-        _buildStatCard(
-          'High\nScore',
-          stats.maxScore.toString(),
-          Icons.star,
-        ),
-        const SizedBox(width: AppTheme.paddingSmall),
-        _buildStatCard(
-          'Current\nStreak',
-          stats.currentStreak.toString(),
-          Icons.local_fire_department,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPlayerInfo() {
-    final stats = userStats ?? UserStats.loading();
-
-    return Row(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: AppTheme.accent,
-              width: 2,
-            ),
-          ),
-          child: const CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.white24,
-            child: Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 30,
-            ),
-          ),
-        ),
-        const SizedBox(width: AppTheme.paddingSmall),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                stats.playerName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Container(
-                width: 100,
-                height: 6,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(3),
-                  gradient: AppTheme.accentGradient,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }
