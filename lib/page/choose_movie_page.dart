@@ -18,6 +18,7 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
 
   @override
   void dispose() {
+    print('dispose');
     _searchController.dispose();
     super.dispose();
   }
