@@ -159,6 +159,7 @@ class ApiClient {
       return UserStats.fromJson(json);
     } else {
       final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+      print(body);
       throw ApiException(
         statusCode: response.statusCode,
         message: body['message'] ?? 'An unknown error occurred',
@@ -179,6 +180,7 @@ class ApiClient {
       return json;
     } else {
       final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+      print(body);
       throw ApiException(
         statusCode: response.statusCode,
         message: body['message'] ?? 'An unknown error occurred',
@@ -196,9 +198,11 @@ class ApiClient {
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final json = jsonDecode(response.body);
-      return json as List<SavedGame>;
+      print(json);
+      return SavedGame.fromJsonList(json);
     } else {
       final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+      print(body);
       throw ApiException(
         statusCode: response.statusCode,
         message: body['message'] ?? 'An unknown error occurred',
@@ -216,9 +220,12 @@ class ApiClient {
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final json = jsonDecode(response.body);
-      return json as List<MovieData>;
+      print(json);
+      List<MovieData> movies = MovieData.fromJsonList(json);
+      return movies;
     } else {
       final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+      print(body);
       throw ApiException(
         statusCode: response.statusCode,
         message: body['message'] ?? 'An unknown error occurred',

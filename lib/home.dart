@@ -9,6 +9,8 @@ import 'package:game/leaderboard_page.dart';
 import 'package:game/profile_page.dart';
 import 'package:game/quick_play_page.dart';
 
+import 'game_finished_page.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -30,6 +32,7 @@ class _HomePageState extends State<HomePage> {
     try {
       return await apiClient.getHomePageStats();
     } catch (e) {
+      print(e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -238,7 +241,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 SizedBox(width: 4),
                                 Text(
-                                  '${userStats.xp} XP',
+                                  '${userStats.xp.toInt()} XP',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 12,
@@ -326,7 +329,18 @@ class _HomePageState extends State<HomePage> {
                                   'Multiplayer',
                                   Icons.group,
                                   'Play with friends',
-                                  () {},
+                                  () {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => GameFinishedPage(
+                                          score: 100,
+                                          isVictory: true,
+                                          movieName: 'Deneme',
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ],
                             ),

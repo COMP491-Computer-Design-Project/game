@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:game/theme/theme.dart';
 import 'package:game/client/api_client.dart';
-
+import 'package:intl/intl.dart';
 import 'model/saved_game.dart';
 
 class SavedGamesPage extends StatefulWidget {
@@ -15,6 +15,8 @@ class _SavedGamesPageState extends State<SavedGamesPage> {
   List<SavedGame> _savedGames = [];
   bool _isLoading = true;
   final apiClient = ApiClient();
+  final DateFormat formatter = DateFormat('dd/MM/yyyy');
+
 
   @override
   void initState() {
@@ -24,7 +26,9 @@ class _SavedGamesPageState extends State<SavedGamesPage> {
 
   Future<void> _loadSavedGames() async {
     try {
+      print('buradayım');
       final chats = await apiClient.getUserChats();
+      print(chats);
       setState(() {
         _savedGames = chats;
         _isLoading = false;
@@ -174,7 +178,7 @@ class _SavedGamesPageState extends State<SavedGamesPage> {
                           ),
                         ),
                         Text(
-                          'Last played: ${game.lastPlayed}',
+                          'Last played: ${formatter.format(game.lastPlayed)}',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 12,

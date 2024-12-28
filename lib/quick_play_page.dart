@@ -64,10 +64,7 @@ class _QuickPlayPageState extends State<QuickPlayPage>
           ),
         );
       }
-      final fetchedMovies = dummyMovieData;
-      setState(() {
-        movies = fetchedMovies;
-      });
+      throw Exception('Failed to load movies: $e');
     }
   }
 
@@ -100,11 +97,10 @@ class _QuickPlayPageState extends State<QuickPlayPage>
   void _navigateToCharacterCreation() {
     if (selectedMovie == null) return;
 
-    String chatName = 'randomgamechatname';
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CharacterCreationPage(movieId: selectedMovie!.movieId, movieName: selectedMovie!.title, chatName: chatName),
+        builder: (context) => CharacterCreationPage(movieId: selectedMovie!.name, movieName: selectedMovie!.title),
       ),
     );
   }
@@ -254,7 +250,7 @@ class _QuickPlayPageState extends State<QuickPlayPage>
                                           decoration: BoxDecoration(
                                             borderRadius: BorderRadius.circular(12),
                                             image: DecorationImage(
-                                              image: AssetImage(movie.imagePath),
+                                              image: NetworkImage(movie.imagePath),
                                               fit: BoxFit.cover,
                                             ),
                                             boxShadow: [

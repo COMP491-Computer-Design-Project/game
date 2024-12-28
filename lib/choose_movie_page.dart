@@ -23,6 +23,7 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
   void initState() {
     super.initState();
     movieDataFuture = _fetchMovieData();
+    print(movieDataFuture);
   }
 
   @override
@@ -35,6 +36,7 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
     try {
       return await apiClient.getMovies();
     } catch (e) {
+      print(e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -43,8 +45,7 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
           ),
         );
       }
-      // Return dummy data if API call fails
-      return dummyMovieData;
+      throw Exception('Failed to load movies: $e');
     }
   }
 
@@ -223,8 +224,7 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
         MaterialPageRoute(
           builder: (context) => CharacterCreationPage(
             movieName: movie.title,
-            movieId: movie.movieId,
-            chatName: movie.movieId,
+            movieId: movie.name,
           ),
         ),
       ),
@@ -244,7 +244,7 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                   image: DecorationImage(
-                    image: AssetImage(movie.imagePath),
+                    image: NetworkImage(movie.imagePath),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -331,38 +331,43 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
     );
   }
 }
-
+/*
 final List<MovieData> dummyMovieData = [
   MovieData(
+    id: 0,
     title: "The Dark Knight",
     description: "When the menace known as the Joker emerges from his mysterious past, he wreaks havoc and chaos on the people of Gotham. The Dark Knight must accept one of the greatest psychological and physical tests of his ability to fight injustice.",
     imagePath: "assets/images/dark_knight.jpg",
     genre: "Action",
     rating: 4.9,
-    movieId: "dark_knight",
+    name: "dark_knight",
   ),
   MovieData(
+    id: 0,
     title: "Avengers: Endgame",
     description: "After the devastating events of Avengers: Infinity War, the universe is in ruins. With the help of remaining allies, the Avengers assemble once more in order to reverse Thanos' actions and restore balance to the universe.",
     imagePath: "assets/images/endgame.png",
     genre: "Action",
     rating: 4.8,
-    movieId: "Endgame",
+    name: "Endgame",
   ),
   MovieData(
+    id: 0,
     title: "Interstellar",
     description: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival. The film explores the themes of love, sacrifice, and the human spirit.",
     imagePath: "assets/images/interstellar.jpg",
     genre: "Sci-Fi",
     rating: 4.7,
-    movieId: "interstellar",
+    name: "interstellar",
   ),
   MovieData(
+    id: 0,
     title: "The Matrix",
     description: "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers. The Matrix is a groundbreaking sci-fi film that explores themes of reality and perception.",
     imagePath: "assets/images/matrix.png",
     genre: "Sci-Fi",
     rating: 4.8,
-    movieId: "matrix",
+    name: "matrix",
   ),
 ];
+*/

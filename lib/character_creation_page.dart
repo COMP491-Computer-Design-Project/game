@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:game/component/animated_background.dart';
 import 'package:game/theme/theme.dart';
-import 'component/animated_progress_bar.dart';
 import 'component/character_feature_widget.dart';
 import 'game_page.dart';
 import 'model/character_feature_info.dart';
-import 'saved_characters_page.dart';
 
 class CharacterCreationPage extends StatefulWidget {
   final String movieName;
   final String movieId;
-  final String chatName;
 
   const CharacterCreationPage({
     Key? key,
     required this.movieName,
     required this.movieId,
-    required this.chatName,
   }) : super(key: key);
 
   @override
@@ -27,6 +22,30 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
   final int maxIncrements = 20;
   int remainingIncrements = 20;
   final TextEditingController _characterNameController = TextEditingController();
+  final TextEditingController _chatNameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeDefaults();
+  }
+
+  void _initializeDefaults() {
+    remainingIncrements = maxIncrements;
+    _characterNameController.clear();
+    _chatNameController.clear();
+    for (var feature in characterFeatures) {
+      feature.currentValue = feature.defaultValue; // Reset feature values
+    }
+  }
+
+  void _cleanupAndExit() {
+    setState(() {
+      _initializeDefaults(); // Reset all state
+    });
+    Navigator.of(context).pop(); // Exit the page
+  }
+
 
   void _updateFeatureValue(int index, double newValue) {
     final difference = newValue - characterFeatures[index].currentValue;
@@ -72,9 +91,7 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                 child: Row(
                   children: [
                     InkWell(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                      },
+                      onTap: _cleanupAndExit,
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -162,45 +179,28 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppTheme.paddingMedium),
-
-                    // Load Saved Character Button
-                    /*
+                    const SizedBox(height: AppTheme.paddingSmall),
                     Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.paddingMedium,
-                        vertical: AppTheme.paddingSmall,
+                      decoration: BoxDecoration(
+                        color: Colors.white10,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: Colors.white10,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: AppTheme.accent),
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const SavedCharactersPage()),
-                          );
-                        },
-                        icon: Icon(Icons.person_search, color: AppTheme.accent),
-                        label: const Text(
-                          'Load Saved Character',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                      child: TextField(
+                        controller: _chatNameController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          hintText: 'Enter chat name',
+                          hintStyle: TextStyle(color: Colors.white60),
+                          prefixIcon: Icon(Icons.person_outline, color: Colors.white60),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: AppTheme.paddingSmall,
+                            vertical: AppTheme.paddingSmall,
                           ),
                         ),
                       ),
                     ),
-
-                     */
-
+                    const SizedBox(height: AppTheme.paddingMedium),
                     // Character Features
                     ...characterFeatures.map((feature) {
                       final index = characterFeatures.indexOf(feature);
@@ -232,28 +232,6 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                           ),
                         ),
                         const SizedBox(height: AppTheme.paddingSmall),
-
-                        // Save Character Button
-                        /*
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white10,
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(double.infinity, 60),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: _handleSave,
-                          child: const Text(
-                            'Save Character',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                       */
                       ],
                     ),
                   ],
@@ -278,6 +256,10 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
       _showSnackBar('Please enter a character name!');
       return;
     }
+    if (_chatNameController.text.isEmpty) {
+      _showSnackBar('Please enter a chat name!');
+      return;
+    }
     if (remainingIncrements > 0) {
       _showSnackBar('Use all skill points before continuing!');
       return;
@@ -291,19 +273,10 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
           characterName: _characterNameController.text,
           movieName: widget.movieName,
           movieId: widget.movieId,
-          chatName: widget.chatName,
+          chatName: _chatNameController.text,
           characterValues: characterValues,
         ),
       ),
     );
-  }
-
-  void _handleSave() {
-    if (_characterNameController.text.isEmpty) {
-      _showSnackBar('Please enter a character name before saving!');
-      return;
-    }
-    // Implement save functionality
-    _showSnackBar('Character saved successfully!');
   }
 }

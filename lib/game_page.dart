@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:game/client/image_client.dart';
 import 'package:game/theme/theme.dart';
 import 'client/api_client.dart';
+import 'game_finished_page.dart';
 
 class GamePage extends StatefulWidget {
   final String movieName;
@@ -42,6 +43,8 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
   int healthPoint = 100;
   int staminaPoint = 100;
   int progressValue = 50;
+  double finalScore = 0.0;
+  bool isVictory = false;
 
 
 
@@ -400,14 +403,6 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ListTile(
-                    leading: Icon(Icons.save, color: AppTheme.accent),
-                    title: const Text('Save Game', style: TextStyle(color: Colors.white)),
-                    onTap: () {
-                      // Implement save game logic
-                      Navigator.pop(context);
-                    },
-                  ),
-                  ListTile(
                     leading: Icon(Icons.exit_to_app, color: AppTheme.accent),
                     title: const Text('Exit Game', style: TextStyle(color: Colors.white)),
                     onTap: () {
@@ -473,7 +468,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
   }
 
   Future<void> startChat() async {
-    String message = 'Merhaba';
+    String message = 'Hello';
     String accumulatedMessage = ''; // Accumulates incoming text from the server
     String buffer = '';            // Holds partial data until a complete JSON object is found
 
@@ -647,6 +642,24 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                   healthPoint = parsedMessage['hp'];
                   staminaPoint = parsedMessage['sp'];
                 });
+              }
+            }
+
+            if(parsedMessage.keys.contains('gameFinished')){
+              if (parsedMessage['gameFinished'] == true) {
+                setState(() {
+                  finalScore = parsedMessage['finalScore'];
+                });
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GameFinishedPage(
+                      score: finalScore,
+                      isVictory: isVictory,
+                      movieName: widget.movieName,
+                    ),
+                  ),
+                );
               }
             }
 

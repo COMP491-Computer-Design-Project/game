@@ -7,6 +7,7 @@ class CharacterFeatureInfo {
   final String description;
   final IconData icon;
   double currentValue;
+  double defaultValue;
 
   CharacterFeatureInfo({
     required this.name,
@@ -15,6 +16,7 @@ class CharacterFeatureInfo {
     required this.description,
     required this.icon,
     required this.currentValue,
+    required this.defaultValue,
   });
 }
 
@@ -26,6 +28,7 @@ final List<CharacterFeatureInfo> characterFeatures = [
     description: "Physical power and ability to perform feats of strength",
     icon: Icons.fitness_center,
     currentValue: 3.0,
+    defaultValue: 3.0
   ),
   CharacterFeatureInfo(
     name: "Speed",
@@ -34,6 +37,7 @@ final List<CharacterFeatureInfo> characterFeatures = [
     description: "Agility and movement capabilities",
     icon: Icons.speed,
     currentValue: 3.0,
+    defaultValue: 3.0
   ),
   CharacterFeatureInfo(
     name: "Endurance",
@@ -42,6 +46,7 @@ final List<CharacterFeatureInfo> characterFeatures = [
     description: "Ability to withstand physical stress and fatigue",
     icon: Icons.battery_charging_full,
     currentValue: 3.0,
+    defaultValue: 3.0
   ),
   CharacterFeatureInfo(
     name: "Reflexes",
@@ -50,6 +55,7 @@ final List<CharacterFeatureInfo> characterFeatures = [
     description: "Quick reaction time and combat awareness",
     icon: Icons.flash_on,
     currentValue: 3.0,
+    defaultValue: 3.0
   ),
   CharacterFeatureInfo(
     name: "Vision",
@@ -58,6 +64,7 @@ final List<CharacterFeatureInfo> characterFeatures = [
     description: "Perception and attention to detail",
     icon: Icons.visibility,
     currentValue: 3.0,
+    defaultValue: 3.0
   ),
   CharacterFeatureInfo(
     name: "Intelligence",
@@ -66,6 +73,7 @@ final List<CharacterFeatureInfo> characterFeatures = [
     description: "Problem-solving and analytical thinking",
     icon: Icons.psychology,
     currentValue: 3.0,
+    defaultValue: 3.0
   ),
   CharacterFeatureInfo(
     name: "Strategy",
@@ -74,6 +82,7 @@ final List<CharacterFeatureInfo> characterFeatures = [
     description: "Tactical planning and decision making",
     icon: Icons.architecture,
     currentValue: 3.0,
+    defaultValue: 3.0
   ),
   CharacterFeatureInfo(
     name: "Charisma",
@@ -82,6 +91,7 @@ final List<CharacterFeatureInfo> characterFeatures = [
     description: "Social influence and leadership ability",
     icon: Icons.record_voice_over,
     currentValue: 3.0,
+    defaultValue: 3.0
   ),
   CharacterFeatureInfo(
     name: "Intuition",
@@ -90,6 +100,7 @@ final List<CharacterFeatureInfo> characterFeatures = [
     description: "Gut feeling and ability to sense danger",
     icon: Icons.lightbulb,
     currentValue: 3.0,
+    defaultValue: 3.0
   ),
   CharacterFeatureInfo(
     name: "Focus",
@@ -98,5 +109,6 @@ final List<CharacterFeatureInfo> characterFeatures = [
     description: "Mental concentration and willpower",
     icon: Icons.center_focus_strong,
     currentValue: 3.0,
+    defaultValue: 3.0
   ),
 ];
