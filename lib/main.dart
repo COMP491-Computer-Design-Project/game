@@ -9,9 +9,18 @@ import 'package:game/page/quick_play_page.dart';
 import 'package:game/page/register_page.dart';
 import 'package:game/page/saved_games_page.dart';
 import 'package:game/page/welcome_page.dart';
+import 'package:game/provider/movie_data_provider.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => MovieDataProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

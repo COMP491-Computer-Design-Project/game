@@ -3,6 +3,9 @@ import 'package:game/page/postgame_page.dart';
 import 'package:game/theme/theme.dart';
 import 'package:game/model/user_stats.dart';
 import 'package:game/client/api_client.dart';
+import 'package:provider/provider.dart';
+
+import '../provider/movie_data_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -17,9 +20,17 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    fetchAndStoreMovies(context);
     super.initState();
     userStatsFuture = _fetchUserStats();
   }
+
+  void fetchAndStoreMovies(BuildContext context) async {
+    print('fetching movies');
+    final movies = await apiClient.getMovies(); // Assume this fetches movie data
+    Provider.of<MovieDataProvider>(context, listen: false).setMovies(movies);
+  }
+
 
   Future<UserStats> _fetchUserStats() async {
     try {
