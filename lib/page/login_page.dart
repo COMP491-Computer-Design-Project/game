@@ -1,34 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:game/client/api_client.dart';
-import 'package:game/home.dart';
+import 'package:game/page/register_page.dart';
 import 'package:game/theme/theme.dart';
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+import 'home_page.dart';
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
+class _LoginPageState extends State<LoginPage> {
+  bool isPasswordVisible = false;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _retypePasswordController =
-      TextEditingController();
   final apiClient = ApiClient();
-
-  bool _passwordVisible = false;
-  bool _retypePasswordVisible = false;
 
   @override
   void dispose() {
-    _usernameController.dispose();
-    _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _retypePasswordController.dispose();
     super.dispose();
   }
 
@@ -39,84 +32,103 @@ class _RegisterPageState extends State<RegisterPage> {
         decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
         child: SafeArea(
           child: Center(
-            // Add Center widget
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.paddingMedium),
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingMedium),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center, // Add this
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-
                     // Logo
                     Image.asset(
                       'assets/logo.png',
-                      height: 180,
+                      height: 200,
                       fit: BoxFit.contain,
                     ),
                     const SizedBox(height: AppTheme.paddingLarge),
 
-                    // Title
+                    // Welcome text
                     ShaderMask(
-                      shaderCallback: (bounds) =>
-                          AppTheme.accentGradient.createShader(bounds),
+                      shaderCallback: (bounds) => AppTheme.accentGradient.createShader(bounds),
                       child: Text(
-                        'Create an Account',
+                        'Welcome Back!',
                         style: AppTheme.headingStyle,
                       ),
                     ),
                     const SizedBox(height: AppTheme.paddingLarge),
 
-                    // Form Fields
-                    _buildInputField(_usernameController, 'Username'),
+                    // Email Field
+                    _buildInputField(
+                      _emailController,
+                      'Email',
+                      keyboardType: TextInputType.emailAddress,
+                      prefixIcon: Icons.email_outlined,
+                    ),
                     const SizedBox(height: AppTheme.paddingSmall),
-                    _buildInputField(_emailController, 'Email Address',
-                        keyboardType: TextInputType.emailAddress),
-                    const SizedBox(height: AppTheme.paddingSmall),
-                    _buildPasswordField(_passwordController, 'Password',
-                        isVisible: _passwordVisible,
-                        onToggleVisibility: () => setState(
-                            () => _passwordVisible = !_passwordVisible)),
-                    const SizedBox(height: AppTheme.paddingSmall),
+
+                    // Password Field
                     _buildPasswordField(
-                        _retypePasswordController, 'Retype Password',
-                        isVisible: _retypePasswordVisible,
-                        onToggleVisibility: () => setState(() =>
-                            _retypePasswordVisible = !_retypePasswordVisible)),
+                      _passwordController,
+                      'Password',
+                      isVisible: isPasswordVisible,
+                      onToggleVisibility: () {
+                        setState(() => isPasswordVisible = !isPasswordVisible);
+                      },
+                    ),
+                    const SizedBox(height: AppTheme.paddingSmall),
+
+                    // Forgot Password
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          // Handle forgot password
+                        },
+                        child: ShaderMask(
+                          shaderCallback: (bounds) => 
+                              AppTheme.accentGradient.createShader(bounds),
+                          child: const Text(
+                            'Forgot Password',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: AppTheme.paddingLarge),
 
-                    // Create Button
+                    // Continue Button
                     Container(
                       decoration: AppTheme.buttonBoxDecoration,
                       child: ElevatedButton(
                         style: AppTheme.buttonStyle,
-                        onPressed: _handleRegister,
+                        onPressed: _handleLogin,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('Create Account',
-                                style: AppTheme.buttonTextStyle),
+                            Text('Continue', style: AppTheme.buttonTextStyle),
                             const SizedBox(width: AppTheme.paddingSmall),
-                            const Icon(Icons.arrow_forward),
+                            const Icon(Icons.arrow_forward, size: 20),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(height: AppTheme.paddingSmall),
 
-                    // Login Link
+                    // Sign Up Link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("Already have an account? ",
+                        Text("Don't have an account? ",
                             style: AppTheme.bodyStyle),
                         GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () {Navigator.pushReplacementNamed(context, '/register');},
                           child: ShaderMask(
-                            shaderCallback: (bounds) =>
+                            shaderCallback: (bounds) => 
                                 AppTheme.accentGradient.createShader(bounds),
                             child: const Text(
-                              'Login',
+                              'Sign Up',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -137,9 +149,12 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // Helper method for input fields
-  Widget _buildInputField(TextEditingController controller, String hint,
-      {TextInputType? keyboardType}) {
+  Widget _buildInputField(
+    TextEditingController controller,
+    String hint, {
+    TextInputType? keyboardType,
+    IconData? prefixIcon,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white10,
@@ -152,18 +167,25 @@ class _RegisterPageState extends State<RegisterPage> {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: const TextStyle(color: Colors.white60),
+          prefixIcon: prefixIcon != null
+              ? Icon(prefixIcon, color: Colors.white60)
+              : null,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.paddingSmall,
-              vertical: AppTheme.paddingSmall),
+            horizontal: AppTheme.paddingSmall,
+            vertical: AppTheme.paddingSmall,
+          ),
         ),
       ),
     );
   }
 
-  // Helper method for password fields
-  Widget _buildPasswordField(TextEditingController controller, String hint,
-      {required bool isVisible, required VoidCallback onToggleVisibility}) {
+  Widget _buildPasswordField(
+    TextEditingController controller,
+    String hint, {
+    required bool isVisible,
+    required VoidCallback onToggleVisibility,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white10,
@@ -176,10 +198,7 @@ class _RegisterPageState extends State<RegisterPage> {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: const TextStyle(color: Colors.white60),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.paddingSmall,
-              vertical: AppTheme.paddingSmall),
+          prefixIcon: const Icon(Icons.lock_outline, color: Colors.white60),
           suffixIcon: InkWell(
             onTap: onToggleVisibility,
             child: Icon(
@@ -187,27 +206,28 @@ class _RegisterPageState extends State<RegisterPage> {
               color: Colors.white60,
             ),
           ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.paddingSmall,
+            vertical: AppTheme.paddingSmall,
+          ),
         ),
       ),
     );
   }
 
-  // Handler for register button
-  Future<void> _handleRegister() async {
+  Future<void> _handleLogin() async {
     try {
       final email = _emailController.text;
       final password = _passwordController.text;
-      final username = _usernameController.text;
-      final response = await apiClient.register(email, password, username);
+
+      final response = await apiClient.login(email, password);
       if (response) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
-        );
+        Navigator.pushReplacementNamed(context, '/game-home');
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Registration failed: $e')),
+        SnackBar(content: Text('Login failed: $e')),
       );
     }
   }

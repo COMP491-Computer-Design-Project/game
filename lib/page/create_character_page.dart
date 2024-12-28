@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:game/theme/theme.dart';
-import 'component/character_feature_widget.dart';
+import '../component/character_feature_widget.dart';
 import 'game_page.dart';
-import 'model/character_feature_info.dart';
+import '../model/character_feature_info.dart';
 
 class CharacterCreationPage extends StatefulWidget {
   final String movieName;
@@ -41,9 +41,9 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
 
   void _cleanupAndExit() {
     setState(() {
-      _initializeDefaults(); // Reset all state
+      _initializeDefaults();
     });
-    Navigator.of(context).pop(); // Exit the page
+    Navigator.of(context).pop();
   }
 
 

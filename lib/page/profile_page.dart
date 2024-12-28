@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:game/page/welcome_page.dart';
 import 'package:game/theme/theme.dart';
-import 'package:game/welcome.dart';
 
-import 'client/api_client.dart';
+import '../client/api_client.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -225,9 +226,16 @@ class _ProfilePageState extends State<ProfilePage> {
           'About',
           style: TextStyle(color: Colors.white),
         ),
-        content: Text(
-          about,
-          style: const TextStyle(color: Colors.white70),
+        content: SizedBox(
+          width: double.maxFinite, // Ensures proper rendering in the dialog
+          child: MarkdownBody(
+            data: about,
+            styleSheet: MarkdownStyleSheet(
+              p: const TextStyle(color: Colors.white70),
+              strong: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              listBullet: const TextStyle(color: Colors.white70),
+            ),
+          ),
         ),
         actions: [
           TextButton(
@@ -243,8 +251,18 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-String about = "This game was designed as a final project by four students:\n\n"
-    "Ata Halıcıoğlu\n"
-    "Fatih Erdoğan\n"
-    "Oğuz Kağan Hitit\n"
-    "Berat Karayılan";
+String about = """
+This game was developed as part of our final project for the **COMP491 Computer Engineering Design** course, 
+offered in **Fall 2024** at **Koç University**. 
+
+We are a team of four **Computer Science students** who collaborated to create this project. 
+
+**Team Members:**
+- Ata Halıcıoğlu
+- Fatih Erdoğan
+- Oğuz Kağan Hitit
+- Berat Karayılan
+
+We hope you enjoy playing our game as much as we enjoyed creating it!
+""";
+

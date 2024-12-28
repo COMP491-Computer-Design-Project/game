@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:game/theme/theme.dart';
 import 'package:game/client/api_client.dart';
 import 'package:intl/intl.dart';
-import 'model/saved_game.dart';
+import '../model/saved_game.dart';
 
 class SavedGamesPage extends StatefulWidget {
   const SavedGamesPage({Key? key}) : super(key: key);

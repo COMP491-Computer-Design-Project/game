@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:game/client/image_client.dart';
 import 'package:game/theme/theme.dart';
-import 'client/api_client.dart';
-import 'game_finished_page.dart';
+import '../client/api_client.dart';
+import 'postgame_page.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class GamePage extends StatefulWidget {
   final String movieName;
@@ -43,6 +44,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
   int healthPoint = 100;
   int staminaPoint = 100;
   int progressValue = 50;
+  int steps = 0;
   double finalScore = 0.0;
   bool isVictory = false;
 
@@ -74,13 +76,16 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
     }
   }
+
 
   @override
   void initState() {
@@ -161,7 +166,6 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
       padding: const EdgeInsets.all(AppTheme.paddingSmall),
       decoration: BoxDecoration(
         color: Colors.black54,
-        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
@@ -204,7 +208,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
             children: [
               _buildStatChip(Icons.favorite, "Health", healthPoint.toString()),
               _buildStatChip(Icons.flash_on, "Energy", staminaPoint.toString()),
-              _buildStatChip(Icons.star, "Experience", "240"),
+              _buildStatChip(Icons.directions_run, "Steps", steps.toString()),
             ],
           ),
           const SizedBox(height: AppTheme.paddingSmall),
@@ -278,8 +282,10 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     );
   }
 
+
   Widget _buildMessageBubble(Map<String, dynamic> message) {
     final isMe = message['isMe'] as bool;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.paddingSmall),
       child: Row(
@@ -298,14 +304,27 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                   width: 1,
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    message['text'] ?? '',
-                    style: const TextStyle(color: Colors.white),
+              child: MarkdownBody(
+                data: message['text'] ?? '',
+                styleSheet: MarkdownStyleSheet(
+                  p: const TextStyle(color: Colors.white),
+                  code: const TextStyle(
+                    color: Colors.amber,
+                    backgroundColor: Colors.black26,
                   ),
-                ],
+                  strong: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  em: const TextStyle(
+                    fontStyle: FontStyle.italic,
+                    color: Colors.white70,
+                  ),
+                ),
+                onTapLink: (text, href, title) {
+                  // Handle link taps, e.g., navigate to a URL
+                  print('Link tapped: $href');
+                },
               ),
             ),
           ),
@@ -321,6 +340,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
       ),
     );
   }
+
 
   Widget _buildCharacterAvatar() {
     return Container(
@@ -343,10 +363,6 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline, color: Colors.white),
-            onPressed: () {}, // Add item/skill selection
-          ),
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingSmall),
@@ -406,8 +422,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                     leading: Icon(Icons.exit_to_app, color: AppTheme.accent),
                     title: const Text('Exit Game', style: TextStyle(color: Colors.white)),
                     onTap: () {
-                      Navigator.pop(context); // Close dialog
-                      Navigator.pop(context); // Exit game
+                      Navigator.of(context).popUntil(ModalRoute.withName('/game-home'));
                     },
                   ),
                 ],

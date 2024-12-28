@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:game/character_creation_page.dart';
 import 'package:game/theme/theme.dart';
-
-import 'client/api_client.dart';
-import 'model/movie_data.dart';
+import '../client/api_client.dart';
+import '../model/movie_data.dart';
 
 class ChooseMoviePage extends StatefulWidget {
   const ChooseMoviePage({Key? key}) : super(key: key);
@@ -219,14 +217,13 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
 
   Widget _buildMovieCard(BuildContext context, MovieData movie) {
     return GestureDetector(
-      onTap: () => Navigator.push(
+      onTap: () => Navigator.pushNamed(
         context,
-        MaterialPageRoute(
-          builder: (context) => CharacterCreationPage(
-            movieName: movie.title,
-            movieId: movie.name,
-          ),
-        ),
+        '/character-creation-page',
+        arguments: {
+          'movieName': movie.title,
+          'movieId': movie.name,
+        },
       ),
       child: Container(
         decoration: BoxDecoration(

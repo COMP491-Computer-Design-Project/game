@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'login.dart';
-import 'theme/theme.dart';
+import 'login_page.dart';
+import '../theme/theme.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({Key? key}) : super(key: key);
@@ -64,13 +64,10 @@ class WelcomePage extends StatelessWidget {
                       child: ElevatedButton(
                         style: AppTheme.buttonStyle,
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const LoginPage()),
-                          );
+                          Navigator.pushReplacementNamed(context, '/login');
                         },
                         child: Text(
-                          'START ADVENTURE',
+                          'Start Adventure',
                           style: AppTheme.buttonTextStyle,
                         ),
                       ),

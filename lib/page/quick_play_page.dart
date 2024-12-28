@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:game/character_creation_page.dart';
-import 'package:game/choose_movie_page.dart';
+import 'package:game/page/create_character_page.dart';
+import 'package:game/page/choose_movie_page.dart';
 import 'package:game/client/api_client.dart';
 import 'package:game/model/movie_data.dart';
 import 'package:game/theme/theme.dart';

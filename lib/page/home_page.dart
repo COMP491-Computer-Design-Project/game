@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:game/character_creation_page.dart';
-import 'package:game/choose_movie_page.dart';
-import 'package:game/saved_games_page.dart';
+import 'package:game/page/postgame_page.dart';
 import 'package:game/theme/theme.dart';
 import 'package:game/model/user_stats.dart';
 import 'package:game/client/api_client.dart';
-import 'package:game/leaderboard_page.dart';
-import 'package:game/profile_page.dart';
-import 'package:game/quick_play_page.dart';
-
-import 'game_finished_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -32,7 +25,6 @@ class _HomePageState extends State<HomePage> {
     try {
       return await apiClient.getHomePageStats();
     } catch (e) {
-      print(e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -57,7 +49,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
+        decoration: const BoxDecoration(gradient: AppTheme.backgroundGradient),
         child: SafeArea(
           child: FutureBuilder<UserStats>(
             future: userStatsFuture,
@@ -107,7 +99,7 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               Text(
                                 userStats.playerName,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -134,12 +126,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           child: GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LeaderboardPage(),
-                                ),
-                              );
+                              Navigator.pushNamed(context, '/leaderboard');
                             },
                             child: const Icon(
                               Icons.emoji_events,
@@ -156,11 +143,8 @@ class _HomePageState extends State<HomePage> {
                           ),
                           child: GestureDetector(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ProfilePage(),
-                                ),
+                              Navigator.pushNamed(
+                                context, '/profile'
                               );
                             },
                             child: const Icon(
@@ -204,7 +188,7 @@ class _HomePageState extends State<HomePage> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
+                                  const Text(
                                     'Current Level',
                                     style: TextStyle(
                                       color: Colors.white70,
@@ -213,7 +197,7 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   Text(
                                     'Level ${userStats.level}',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -239,7 +223,7 @@ class _HomePageState extends State<HomePage> {
                                   color: Colors.amber,
                                   size: 16,
                                 ),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Text(
                                   '${userStats.xp.toInt()} XP',
                                   style: const TextStyle(
@@ -296,33 +280,24 @@ class _HomePageState extends State<HomePage> {
                                   'Story Mode',
                                   Icons.movie,
                                   'Embark on an epic movie journey',
-                                  () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const ChooseMoviePage(),
-                                    ),
+                                  () => Navigator.pushNamed(
+                                    context, '/choose-movie'
                                   ),
                                 ),
                                 _buildGameModeCard(
                                   'Quick Play',
                                   Icons.flash_on,
                                   'Jump into random scenarios',
-                                      () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const QuickPlayPage(),
-                                    ),
+                                      () => Navigator.pushNamed(
+                                    context, '/quick-play'
                                   ),
                                 ),
                                 _buildGameModeCard(
                                   'Continue Game',
                                   Icons.save,
                                   'Resume your last adventure',
-                                  () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const SavedGamesPage(),
-                                    ),
+                                  () => Navigator.pushNamed(
+                                    context, '/saved-games'
                                   ),
                                 ),
                                 _buildGameModeCard(
@@ -333,7 +308,7 @@ class _HomePageState extends State<HomePage> {
                                     Navigator.pushReplacement(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => GameFinishedPage(
+                                        builder: (context) => const GameFinishedPage(
                                           score: 100,
                                           isVictory: true,
                                           movieName: 'Deneme',
@@ -419,7 +394,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             Container(
               padding: const EdgeInsets.all(AppTheme.paddingSmall),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.white10,
                 shape: BoxShape.circle,
                 gradient: AppTheme.accentGradient,

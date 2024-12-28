@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:game/theme/theme.dart';
-import 'package:game/home.dart';
+import 'package:game/page/home_page.dart';
 
 class GameFinishedPage extends StatefulWidget {
   final double score;
@@ -172,11 +172,7 @@ class _GameFinishedPageState extends State<GameFinishedPage> with SingleTickerPr
                         ),
                       ),
                       onPressed: () {
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomePage()),
-                          (route) => false,
-                        );
+                        Navigator.of(context).popUntil(ModalRoute.withName('/game-home'));
                       },
                       child: const Text(
                         'Return Home',
