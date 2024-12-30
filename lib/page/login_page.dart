@@ -123,7 +123,10 @@ class _LoginPageState extends State<LoginPage> {
                         Text("Don't have an account? ",
                             style: AppTheme.bodyStyle),
                         GestureDetector(
-                          onTap: () {Navigator.pushReplacementNamed(context, '/register');},
+                          onTap: () {Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => RegisterPage()),
+                          );},
                           child: ShaderMask(
                             shaderCallback: (bounds) => 
                                 AppTheme.accentGradient.createShader(bounds),
@@ -220,10 +223,13 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final email = _emailController.text;
       final password = _passwordController.text;
-
+      print('içeri giriyourm');
       final response = await apiClient.login(email, password);
       if (response) {
-        Navigator.pushReplacementNamed(context, '/game-home');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

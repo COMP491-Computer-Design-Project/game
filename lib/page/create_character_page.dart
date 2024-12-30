@@ -275,6 +275,7 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
           movieId: widget.movieId,
           chatName: _chatNameController.text,
           characterValues: characterValues,
+          isNewGame: true,
         ),
       ),
     );

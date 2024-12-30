@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:game/page/game_page.dart';
 import 'package:game/theme/theme.dart';
 import 'package:game/client/api_client.dart';
 import 'package:intl/intl.dart';
 import '../model/saved_game.dart';
+import 'create_character_page.dart';
 
 class SavedGamesPage extends StatefulWidget {
   const SavedGamesPage({Key? key}) : super(key: key);
@@ -26,9 +28,7 @@ class _SavedGamesPageState extends State<SavedGamesPage> {
 
   Future<void> _loadSavedGames() async {
     try {
-      print('buradayım');
       final chats = await apiClient.getUserChats();
-      print(chats);
       setState(() {
         _savedGames = chats;
         _isLoading = false;
@@ -79,7 +79,6 @@ class _SavedGamesPageState extends State<SavedGamesPage> {
                   ],
                 ),
               ),
-
               // Search Bar
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -144,6 +143,10 @@ class _SavedGamesPageState extends State<SavedGamesPage> {
       ),
       child: InkWell(
         onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => GamePage(movieName: game.movieName, chatName: game.chatName, threadId: game.threadId, isNewGame: false, hp: game.hp, sp: game.sp,)),
+          );
         },
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.paddingMedium),

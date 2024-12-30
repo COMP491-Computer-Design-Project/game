@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:game/client/image_client.dart';
+import 'package:game/page/home_page.dart';
 import 'package:game/theme/theme.dart';
 import '../client/api_client.dart';
 import 'postgame_page.dart';
@@ -9,18 +10,26 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 class GamePage extends StatefulWidget {
   final String movieName;
   final String chatName;
-  final String movieId;
-  final Map<String, int> characterValues;
-  final String characterName;
+  final String? movieId;
+  final Map<String, int>? characterValues;
+  final String? characterName;
+  final String? threadId;
+  final bool isNewGame;
+  final int? sp;
+  final int? hp;
 
 
   const GamePage({
     Key? key,
     required this.movieName,
     required this.chatName,
-    required this.movieId,
-    required this.characterValues,
-    required this.characterName
+    this.movieId,
+    this.characterValues,
+    this.characterName,
+    this.threadId,
+    required this.isNewGame,
+    this.sp,
+    this.hp
   }) : super(key: key);
 
   @override
@@ -47,8 +56,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
   int steps = 0;
   double finalScore = 0.0;
   bool isVictory = false;
-
-
+  bool isCut = false;
 
   // Callback function to update message text
   void updateMessageText(int index, String text) {
@@ -105,8 +113,76 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    startChat();
+    if(widget.isNewGame){
+      startChat();
+    } else{
+      loadGame();
+    }
     getBackgroundImage();
+  }
+
+  Future<void> loadGame() async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+
+      final response = await apiClient.getChatHistory(widget.threadId!);
+      final messages = response['messages'] as List;
+
+      // Set the threadId from the first message
+      if (messages.isNotEmpty) {
+        threadId = messages[0]['thread_id'];
+      }
+
+      // Create a temporary list to hold all messages
+      final List<Map<String, dynamic>> tempMessages = [];
+
+      // Process messages in reverse order to maintain chronological order
+      for (var message in messages.reversed) {
+        final isAssistant = message['role'] == 'assistant';
+        tempMessages.add({
+          'isMe': !isAssistant,
+          'text': message['content'],
+          'time': TimeOfDay.now().format(context),
+          'status': 'read',
+        });
+      }
+
+      // Update state once with all messages
+      setState(() {
+        _messages.addAll(tempMessages);
+        healthPoint = widget.hp!;
+        staminaPoint = widget.sp!;
+        threadId = widget.threadId!;
+        isLoading = false;
+      });
+
+      // Wait for the next frame when messages are rendered
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Add a small delay to ensure the ListView has been fully rendered
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted && _scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+      });
+
+    } catch (e) {
+      print('Error loading game history: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading game history: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -422,7 +498,10 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                     leading: Icon(Icons.exit_to_app, color: AppTheme.accent),
                     title: const Text('Exit Game', style: TextStyle(color: Colors.white)),
                     onTap: () {
-                      Navigator.of(context).popUntil(ModalRoute.withName('/game-home'));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const HomePage()),
+                      );
                     },
                   ),
                 ],
@@ -493,7 +572,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
       'movieName': widget.movieId,
       'chatName': widget.chatName,
       'message': message,
-      ...widget.characterValues,
+      if (widget.characterValues != null) ...?widget.characterValues,
     };
 
     try {
@@ -664,6 +743,8 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
               if (parsedMessage['gameFinished'] == true) {
                 setState(() {
                   finalScore = parsedMessage['finalScore'];
+                  isVictory = parsedMessage['isWin'];
+                  isCut = parsedMessage['isCut'];
                 });
                 Navigator.pushReplacement(
                   context,
@@ -671,6 +752,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                     builder: (context) => GameFinishedPage(
                       score: finalScore,
                       isVictory: isVictory,
+                      isCut: isCut,
                       movieName: widget.movieName,
                     ),
                   ),

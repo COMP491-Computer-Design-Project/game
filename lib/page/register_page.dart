@@ -199,6 +199,7 @@ class _RegisterPageState extends State<RegisterPage> {
       final password = _passwordController.text;
       final username = _usernameController.text;
       final response = await apiClient.register(email, password, username);
+      print(response);
       if (response) {
         Navigator.push(
           context,

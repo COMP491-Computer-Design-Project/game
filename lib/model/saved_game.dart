@@ -5,12 +5,18 @@ class SavedGame {
   final String chatName;
   final DateTime lastPlayed;
   final int progress;
+  final String threadId;
+  final int hp;
+  final int sp;
 
   const SavedGame({
     required this.movieName,
     required this.chatName,
     required this.lastPlayed,
     required this.progress,
+    required this.threadId,
+    required this.hp,
+    required this.sp,
   });
 
   // Factory constructor to create an instance of SavedGame from a JSON map
@@ -20,6 +26,9 @@ class SavedGame {
       chatName: json['chat_name'] ?? 'Unknown Chat',
       lastPlayed: DateTime.parse(json['updated_at']),
       progress: json['progress'] ?? 0,
+      threadId: json['thread_id'],
+      hp: json['hp'],
+      sp: json['sp'],
     );
   }
 

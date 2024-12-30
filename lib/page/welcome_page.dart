@@ -64,7 +64,10 @@ class WelcomePage extends StatelessWidget {
                       child: ElevatedButton(
                         style: AppTheme.buttonStyle,
                         onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/login');
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => LoginPage()),
+                          );
                         },
                         child: Text(
                           'Start Adventure',

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:game/theme/theme.dart';
+import 'package:game/client/api_client.dart';
+import '../model/leaderboard_item.dart';
 
 class LeaderboardPage extends StatelessWidget {
   const LeaderboardPage({Key? key}) : super(key: key);
@@ -45,29 +47,76 @@ class LeaderboardPage extends StatelessWidget {
                 ),
               ),
 
-              // Top 3 Players
-              Padding(
-                padding: const EdgeInsets.all(AppTheme.paddingMedium),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _buildTopPlayer("Sarah", "32,450", 2),
-                    _buildTopPlayer("Michael", "45,670", 1),
-                    _buildTopPlayer("Alex", "28,900", 3),
-                  ],
-                ),
-              ),
-
-              // Other Players List
+              // Main content in Expanded widget
               Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.paddingMedium,
-                  ),
-                  itemCount: 20,
-                  itemBuilder: (context, index) {
-                    return _buildLeaderboardItem(index + 4);
+                child: FutureBuilder<Leaderboard>(
+                  future: ApiClient().getLeaderboard(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.leaderboard.isEmpty) {
+                      return const Center(child: Text('No leaderboard data available'));
+                    }
+
+                    final leaderboard = snapshot.data!;
+                    final hasTopThree = leaderboard.leaderboard.length >= 3;
+
+                    return SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppTheme.paddingMedium),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (hasTopThree) ...[
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  _buildTopPlayer(
+                                    leaderboard.leaderboard[1].username,
+                                    leaderboard.leaderboard[1].totalScore.toString(),
+                                    2,
+                                  ),
+                                  _buildTopPlayer(
+                                    leaderboard.leaderboard[0].username,
+                                    leaderboard.leaderboard[0].totalScore.toString(),
+                                    1,
+                                  ),
+                                  _buildTopPlayer(
+                                    leaderboard.leaderboard[2].username,
+                                    leaderboard.leaderboard[2].totalScore.toString(),
+                                    3,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppTheme.paddingMedium),
+                            ],
+
+                            // Other players list
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: hasTopThree
+                                  ? leaderboard.leaderboard.length - 3
+                                  : leaderboard.leaderboard.length,
+                              itemBuilder: (context, index) {
+                                final itemIndex = hasTopThree ? index + 3 : index;
+                                return _buildLeaderboardItem(
+                                  itemIndex + 1,
+                                  leaderboard.leaderboard[itemIndex],
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
                   },
                 ),
               ),
@@ -84,11 +133,12 @@ class LeaderboardPage extends StatelessWidget {
     final Color color = position == 1
         ? Colors.amber
         : position == 2
-            ? Colors.grey[300]!
-            : Colors.brown[300]!;
+        ? Colors.grey[300]!
+        : Colors.brown[300]!;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           padding: const EdgeInsets.all(2),
@@ -136,7 +186,7 @@ class LeaderboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildLeaderboardItem(int position) {
+  Widget _buildLeaderboardItem(int position, LeaderboardItem item) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.paddingSmall),
       padding: const EdgeInsets.all(AppTheme.paddingSmall),
@@ -175,14 +225,14 @@ class LeaderboardPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Player ${position}',
+                  item.username,
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  '${50000 - (position * 1000)} points',
+                  '${item.totalScore} points',
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
@@ -201,7 +251,7 @@ class LeaderboardPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              'Level ${30 - position}',
+              'Level ${item.level}',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
@@ -213,4 +263,4 @@ class LeaderboardPage extends StatelessWidget {
       ),
     );
   }
-} 
+}

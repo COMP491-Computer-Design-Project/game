@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:game/theme/theme.dart';
-import 'package:game/page/home_page.dart';
 
 class GameFinishedPage extends StatefulWidget {
   final double score;
   final bool isVictory;
+  final bool isCut;
   final String movieName;
 
   const GameFinishedPage({
     Key? key,
     required this.score,
+    required this.isCut,
     required this.isVictory,
     required this.movieName,
   }) : super(key: key);
@@ -23,6 +24,41 @@ class _GameFinishedPageState extends State<GameFinishedPage> with SingleTickerPr
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scoreAnimation;
+
+  // 1. Helper to pick the correct text
+  String getResultText() {
+    if (widget.isVictory) {
+      return 'Mission Complete!';
+    } else if (widget.isCut) {
+      // scenario: not victory, but 'cut'
+      return 'Mission Halted';
+    } else {
+      // scenario: not victory, not cut => definite loss
+      return 'Mission Failed';
+    }
+  }
+
+  // 2. Helper to pick the correct icon
+  IconData getResultIcon() {
+    if (widget.isVictory) {
+      return Icons.emoji_events;
+    } else if (widget.isCut) {
+      return Icons.block; // or some neutral icon
+    } else {
+      return Icons.warning_amber;
+    }
+  }
+
+  // 3. Helper to pick the correct icon color
+  Color getResultIconColor() {
+    if (widget.isVictory) {
+      return Colors.amber;
+    } else if (widget.isCut) {
+      return Colors.grey;
+    } else {
+      return Colors.red;
+    }
+  }
 
   @override
   void initState() {
@@ -64,6 +100,11 @@ class _GameFinishedPageState extends State<GameFinishedPage> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
+    // Use the helpers to get the correct values
+    final resultText = getResultText();
+    final resultIcon = getResultIcon();
+    final iconColor = getResultIconColor();
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(gradient: AppTheme.backgroundGradient),
@@ -77,9 +118,9 @@ class _GameFinishedPageState extends State<GameFinishedPage> with SingleTickerPr
                 ScaleTransition(
                   scale: _scaleAnimation,
                   child: Icon(
-                    widget.isVictory ? Icons.emoji_events : Icons.warning_amber,
+                    resultIcon,
                     size: 80,
-                    color: widget.isVictory ? Colors.amber : Colors.red,
+                    color: iconColor,
                   ),
                 ),
                 const SizedBox(height: AppTheme.paddingLarge),
@@ -91,7 +132,7 @@ class _GameFinishedPageState extends State<GameFinishedPage> with SingleTickerPr
                     shaderCallback: (bounds) =>
                         AppTheme.accentGradient.createShader(bounds),
                     child: Text(
-                      widget.isVictory ? 'Mission Complete!' : 'Mission Failed',
+                      resultText,
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -172,7 +213,9 @@ class _GameFinishedPageState extends State<GameFinishedPage> with SingleTickerPr
                         ),
                       ),
                       onPressed: () {
-                        Navigator.of(context).popUntil(ModalRoute.withName('/game-home'));
+                        Navigator.of(context).popUntil(
+                          ModalRoute.withName('/game-home'),
+                        );
                       },
                       child: const Text(
                         'Return Home',

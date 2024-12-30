@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:game/page/choose_movie_page.dart';
+import 'package:game/page/leaderboard_page.dart';
 import 'package:game/page/postgame_page.dart';
+import 'package:game/page/profile_page.dart';
+import 'package:game/page/quick_play_page.dart';
+import 'package:game/page/saved_games_page.dart';
 import 'package:game/theme/theme.dart';
 import 'package:game/model/user_stats.dart';
 import 'package:game/client/api_client.dart';
 import 'package:provider/provider.dart';
-
-import '../provider/movie_data_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -20,17 +23,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    fetchAndStoreMovies(context);
     super.initState();
     userStatsFuture = _fetchUserStats();
   }
-
-  void fetchAndStoreMovies(BuildContext context) async {
-    print('fetching movies');
-    final movies = await apiClient.getMovies(); // Assume this fetches movie data
-    Provider.of<MovieDataProvider>(context, listen: false).setMovies(movies);
-  }
-
 
   Future<UserStats> _fetchUserStats() async {
     try {
@@ -127,24 +122,6 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                         ),
-                        // Leaderboard Button
-                        Container(
-                          margin: const EdgeInsets.only(right: AppTheme.paddingSmall),
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white10,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.pushNamed(context, '/leaderboard');
-                            },
-                            child: const Icon(
-                              Icons.emoji_events,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
                         // Settings/Profile Button
                         Container(
                           padding: const EdgeInsets.all(8),
@@ -154,8 +131,9 @@ class _HomePageState extends State<HomePage> {
                           ),
                           child: GestureDetector(
                             onTap: () {
-                              Navigator.pushNamed(
-                                context, '/profile'
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => ProfilePage()),
                               );
                             },
                             child: const Icon(
@@ -291,39 +269,38 @@ class _HomePageState extends State<HomePage> {
                                   'Story Mode',
                                   Icons.movie,
                                   'Embark on an epic movie journey',
-                                  () => Navigator.pushNamed(
-                                    context, '/choose-movie'
-                                  ),
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => ChooseMoviePage()),
+                                  )
                                 ),
                                 _buildGameModeCard(
                                   'Quick Play',
                                   Icons.flash_on,
                                   'Jump into random scenarios',
-                                      () => Navigator.pushNamed(
-                                    context, '/quick-play'
-                                  ),
+                                      () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => QuickPlayPage()),
+                                      ),
                                 ),
                                 _buildGameModeCard(
                                   'Continue Game',
                                   Icons.save,
                                   'Resume your last adventure',
-                                  () => Navigator.pushNamed(
-                                    context, '/saved-games'
+                                  () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => SavedGamesPage()),
                                   ),
                                 ),
                                 _buildGameModeCard(
-                                  'Multiplayer',
-                                  Icons.group,
-                                  'Play with friends',
+                                  'Leaderboard',
+                                  Icons.emoji_events,
+                                  'See your global ranking',
                                   () {
-                                    Navigator.pushReplacement(
+                                    Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => const GameFinishedPage(
-                                          score: 100,
-                                          isVictory: true,
-                                          movieName: 'Deneme',
-                                        ),
+                                        builder: (context) => const LeaderboardPage()
                                       ),
                                     );
                                   },
