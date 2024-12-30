@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:game/page/home_page.dart';
 import 'package:game/theme/theme.dart';
 import '../component/character_feature_widget.dart';
 import 'game_page.dart';
@@ -21,7 +22,8 @@ class CharacterCreationPage extends StatefulWidget {
 class _CharacterCreationPageState extends State<CharacterCreationPage> {
   final int maxIncrements = 20;
   int remainingIncrements = 20;
-  final TextEditingController _characterNameController = TextEditingController();
+  final TextEditingController _characterNameController =
+      TextEditingController();
   final TextEditingController _chatNameController = TextEditingController();
 
   @override
@@ -43,9 +45,11 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
     setState(() {
       _initializeDefaults();
     });
-    Navigator.of(context).pop();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+    );
   }
-
 
   void _updateFeatureValue(int index, double newValue) {
     final difference = newValue - characterFeatures[index].currentValue;
@@ -98,7 +102,8 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                           color: Colors.white10,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.arrow_back, color: Colors.white),
+                        child:
+                            const Icon(Icons.arrow_back, color: Colors.white),
                       ),
                     ),
                     const SizedBox(width: AppTheme.paddingMedium),
@@ -148,7 +153,6 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                         ),
                       ],
                     ),
-
                   ],
                 ),
               ),
@@ -170,7 +174,8 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                         decoration: const InputDecoration(
                           hintText: 'Enter character name',
                           hintStyle: TextStyle(color: Colors.white60),
-                          prefixIcon: Icon(Icons.person_outline, color: Colors.white60),
+                          prefixIcon:
+                              Icon(Icons.person_outline, color: Colors.white60),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(
                             horizontal: AppTheme.paddingSmall,
@@ -191,7 +196,8 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                         decoration: const InputDecoration(
                           hintText: 'Enter chat name',
                           hintStyle: TextStyle(color: Colors.white60),
-                          prefixIcon: Icon(Icons.person_outline, color: Colors.white60),
+                          prefixIcon:
+                              Icon(Icons.person_outline, color: Colors.white60),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(
                             horizontal: AppTheme.paddingSmall,
@@ -205,7 +211,8 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                     ...characterFeatures.map((feature) {
                       final index = characterFeatures.indexOf(feature);
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: AppTheme.paddingSmall),
+                        padding: const EdgeInsets.only(
+                            bottom: AppTheme.paddingSmall),
                         child: _buildFeatureCard(feature, index),
                       );
                     }).toList(),
@@ -224,7 +231,8 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text('Start Adventure', style: AppTheme.buttonTextStyle),
+                                Text('Start Adventure',
+                                    style: AppTheme.buttonTextStyle),
                                 const SizedBox(width: AppTheme.paddingSmall),
                                 const Icon(Icons.play_arrow),
                               ],
@@ -264,7 +272,7 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
       _showSnackBar('Use all skill points before continuing!');
       return;
     }
-    
+
     final characterValues = _generateCharacterValuesMap();
     Navigator.push(
       context,
