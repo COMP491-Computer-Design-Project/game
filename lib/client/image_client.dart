@@ -13,12 +13,34 @@ class ImageClient {
 
   ImageClient._internal();
 
-  final String baseUrl = 'http://ec2-51-20-181-96.eu-north-1.compute.amazonaws.com:5000';
+  final String baseUrl = 'http://ec2-13-61-142-172.eu-north-1.compute.amazonaws.com:5000';
 
-  Future<List<Image>> getImage() async {
+  Future<List<Image>> getImage(String movieName, String? message) async {
     final uri = Uri.parse('$baseUrl/image/generate');
+    var completeMessage = '';
+    if (message!=null){
+      completeMessage = """
+      Imagine a cinematic scene inspired by the movie '$movieName'. 
+      The environment should be immersive and reflect the movie's unique theme, 
+      whether it is futuristic, historical, magical, or realistic. 
+      Include dynamic lighting, compelling characters, and intricate details in the setting 
+      to capture the mood and essence of the film. 
+      Make it visually dramatic and captivating, as though it's a still frame from an iconic moment in the movie.
+      """;
+    }else{
+      completeMessage = """
+      Imagine a cinematic scene inspired by the movie '$movieName'. 
+      The scene should depict a moment where a character is $message. 
+      The environment should be immersive and reflect the movie's unique theme, 
+      whether it is futuristic, historical, magical, or realistic. 
+      Include dynamic lighting, compelling characters, and intricate details in the setting 
+      to capture the mood and essence of the film. 
+      Make it visually dramatic and captivating, as though it's a still frame from an iconic moment in the movie.
+      """;
+    }
+    print(completeMessage);
     final requestBody = jsonEncode({
-      "prompt": "Create me a scene from Avengers Endgame"
+      "prompt": completeMessage
     });
 
     final response = await http.post(

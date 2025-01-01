@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:game/theme/theme.dart';
 
+import 'home_page.dart';
+
 class GameFinishedPage extends StatefulWidget {
   final double score;
   final bool isVictory;
@@ -213,8 +215,11 @@ class _GameFinishedPageState extends State<GameFinishedPage> with SingleTickerPr
                         ),
                       ),
                       onPressed: () {
-                        Navigator.of(context).popUntil(
-                          ModalRoute.withName('/game-home'),
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                            builder: (context) => const HomePage()
+                        ),
                         );
                       },
                       child: const Text(

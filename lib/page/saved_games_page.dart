@@ -145,7 +145,7 @@ class _SavedGamesPageState extends State<SavedGamesPage> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => GamePage(movieName: game.movieName, chatName: game.chatName, threadId: game.threadId, isNewGame: false, hp: game.hp, sp: game.sp,)),
+            MaterialPageRoute(builder: (context) => GamePage(movieName: game.movieName, chatName: game.chatName, threadId: game.threadId, isNewGame: false, hp: game.hp, sp: game.sp, stepCount: game.stepCount)),
           );
         },
         child: Padding(

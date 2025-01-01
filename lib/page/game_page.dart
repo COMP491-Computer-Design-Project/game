@@ -17,6 +17,7 @@ class GamePage extends StatefulWidget {
   final bool isNewGame;
   final int? sp;
   final int? hp;
+  final int? stepCount;
 
 
   const GamePage({
@@ -29,7 +30,8 @@ class GamePage extends StatefulWidget {
     this.threadId,
     required this.isNewGame,
     this.sp,
-    this.hp
+    this.hp,
+    this.stepCount,
   }) : super(key: key);
 
   @override
@@ -42,7 +44,8 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
   final imageClient = ImageClient();
   final List<Map<String, dynamic>> _messages = [];
   final ScrollController _scrollController = ScrollController();
-  
+  List<String> _options = [];
+
   Image? backgroundImage;
   String? threadId;
   bool isTyping = false;
@@ -118,7 +121,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     } else{
       loadGame();
     }
-    getBackgroundImage();
+    getBackgroundImage(widget.movieName, '');
   }
 
   Future<void> loadGame() async {
@@ -154,6 +157,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
         _messages.addAll(tempMessages);
         healthPoint = widget.hp!;
         staminaPoint = widget.sp!;
+        steps = widget.stepCount!;
         threadId = widget.threadId!;
         isLoading = false;
       });
@@ -394,13 +398,10 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                   ),
                   em: const TextStyle(
                     fontStyle: FontStyle.italic,
-                    color: Colors.white70,
+                    color: Colors.white,
                   ),
+                  listBullet: const TextStyle(color: Colors.white),
                 ),
-                onTapLink: (text, href, title) {
-                  // Handle link taps, e.g., navigate to a URL
-                  print('Link tapped: $href');
-                },
               ),
             ),
           ),
@@ -417,7 +418,6 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     );
   }
 
-
   Widget _buildCharacterAvatar() {
     return Container(
       width: 40,
@@ -430,39 +430,99 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     );
   }
 
+  void createButtonsFromResponse(String message) {
+    if (message.isEmpty) {
+      setState(() => _options = []);
+      return;
+    }
+
+    // Split message into lines
+    final lines = message.split('\n');
+    final List<String> options = [];
+
+    // Look for numbered options (e.g., "1. Do something")
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (RegExp(r'^\d+\.\s').hasMatch(line)) {
+        // Extract the full option text without the number prefix
+        final optionText = line.replaceFirst(RegExp(r'^\d+\.\s'), '').trim();
+        if (optionText.isNotEmpty) {
+          options.add(optionText);
+        }
+      }
+    }
+
+    setState(() => _options = options);
+  }
+
   Widget _buildInputBar() {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.paddingSmall),
-      decoration: BoxDecoration(
-        color: Colors.black54,
-        border: Border(top: BorderSide(color: AppTheme.accent.withOpacity(0.3))),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingSmall),
-              decoration: BoxDecoration(
-                color: Colors.white10,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: TextField(
-                controller: _controller,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: 'What would you like to do?',
-                  hintStyle: TextStyle(color: Colors.white60),
-                  border: InputBorder.none,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: _options.asMap().entries.map((entry) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: SizedBox(
+                  width: 120, // Set a fixed width for all buttons
+                  child: ElevatedButton(
+                    onPressed: () => _sendMessage(customText: entry.value),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.accent,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      '${entry.key + 1}. ${entry.value.substring(0, entry.value.length > 4 ? 4 : entry.value.length)}...',
+                      style: const TextStyle(fontSize: 14),
+                      textAlign: TextAlign.center, // Center align the text
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        SizedBox(height: 10),
+        // Regular input bar
+        Container(
+          padding: const EdgeInsets.all(AppTheme.paddingSmall),
+          decoration: BoxDecoration(
+            color: Colors.black54,
+            border: Border(top: BorderSide(color: AppTheme.accent.withOpacity(0.3))),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingSmall),
+                  decoration: BoxDecoration(
+                    color: Colors.white10,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: TextField(
+                    controller: _controller,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      hintText: 'What would you like to do?',
+                      hintStyle: TextStyle(color: Colors.white60),
+                      border: InputBorder.none,
+                    ),
+                  ),
                 ),
               ),
-            ),
+              IconButton(
+                icon: const Icon(Icons.send, color: Colors.white),
+                onPressed: _sendMessage,
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.send, color: Colors.white),
-            onPressed: _sendMessage,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -513,11 +573,6 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     );
   }
 
-  void _handleChoice(String choice) {
-    // Implement choice handling logic
-    _sendMessage(customText: choice);
-  }
-
   void _sendMessage({String? customText}) {
     final message = customText ?? _controller.text.trim();
     if (message.isEmpty) return;
@@ -540,9 +595,9 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> getBackgroundImage() async {
+  Future<void> getBackgroundImage(String movieName, String? message) async {
     try {
-      final images = await imageClient.getImage();
+      final images = await imageClient.getImage(movieName, message);
       if (images.isNotEmpty) {
         setState(() {
           backgroundImage = images[0]; // Set the first image as the background
@@ -655,6 +710,8 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
           print('Error processing chunk: $e');
         }
       }
+      print('selam12');
+      createButtonsFromResponse(accumulatedMessage);
     } catch (e) {
       print('Error starting chat: $e');
 
@@ -670,6 +727,15 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
     }
   }
 
+  String? getLastUserMessage() {
+    for (int i = _messages.length - 1; i >= 0; i--) {
+      final message = _messages[i];
+      if (message['isMe'] == true && message['text'] != null) {
+        return message['text'] as String;
+      }
+    }
+    return null;
+  }
 
   Future<void> continueChat(String message, String threadId) async {
     String accumulatedMessage = ''; // We'll accumulate the entire textual response here
@@ -735,9 +801,16 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                   progressValue = parsedMessage['progress_level'];
                   healthPoint = parsedMessage['hp'];
                   staminaPoint = parsedMessage['sp'];
+                  steps = parsedMessage['step_count'];
                 });
               }
             }
+
+            // TODO : Butonu disable et
+            // TODO : load game'de baştai progress yanlış.
+            // TODO : Oyun bitince patlamasyon
+            // TODO: 1,2,3 seçeneklerini buton haline getir.
+            // TODO: Tutorial diye bir yer ekle.
 
             if(parsedMessage.keys.contains('gameFinished')){
               if (parsedMessage['gameFinished'] == true) {
@@ -772,6 +845,8 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
               accumulatedMessage += parsedMessage['message'] ?? '';
               updateMessageText(lastIndex, accumulatedMessage);
               updateMessageStatus(lastIndex, 'read');
+              print('buradayım');
+              createButtonsFromResponse(accumulatedMessage);
             }
 
             _scrollToBottom();
@@ -779,6 +854,13 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
         } catch (e) {
           // If there's an error parsing this chunk, log it
           print('Error processing chunk: $e');
+        }
+      }
+
+      if (steps % 5 == 0) {
+        String? lastMessage = getLastUserMessage();
+        if (lastMessage != null) {
+          getBackgroundImage(widget.movieName, lastMessage);
         }
       }
 

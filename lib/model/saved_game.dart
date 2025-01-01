@@ -8,6 +8,7 @@ class SavedGame {
   final String threadId;
   final int hp;
   final int sp;
+  final int stepCount;
 
   const SavedGame({
     required this.movieName,
@@ -17,6 +18,7 @@ class SavedGame {
     required this.threadId,
     required this.hp,
     required this.sp,
+    required this.stepCount,
   });
 
   // Factory constructor to create an instance of SavedGame from a JSON map
@@ -29,6 +31,7 @@ class SavedGame {
       threadId: json['thread_id'],
       hp: json['hp'],
       sp: json['sp'],
+      stepCount: json['step_count'],
     );
   }
 
