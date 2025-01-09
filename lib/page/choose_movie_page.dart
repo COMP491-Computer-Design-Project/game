@@ -233,7 +233,7 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
           children: [
             // Movie Image
             Expanded(
-              flex: 3,
+              flex: 2,
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),

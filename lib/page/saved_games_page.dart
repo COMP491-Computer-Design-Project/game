@@ -173,11 +173,18 @@ class _SavedGamesPageState extends State<SavedGamesPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          game.movieName,
+                          game.chatName,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          game.movieName,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
                           ),
                         ),
                         Text(

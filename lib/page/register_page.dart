@@ -208,7 +208,7 @@ class _RegisterPageState extends State<RegisterPage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Registration failed: $e')),
+        SnackBar(content: Text('Registration failed. An error occurred.')),
       );
     }
   }

@@ -54,6 +54,7 @@ class ApiClient {
       return true;
     } else {
       final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+
       throw ApiException(
         statusCode: response.statusCode,
         message: body['message'] ?? 'An unknown error occurred',
@@ -224,7 +225,9 @@ class ApiClient {
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      final json = jsonDecode(response.body);
+      final utf8DecodedBody = utf8.decode(response.bodyBytes);
+
+      final json = jsonDecode(utf8DecodedBody);
       printLongString(json);
       return json;
     } else {

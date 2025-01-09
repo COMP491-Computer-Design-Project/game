@@ -134,7 +134,9 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
       });
 
       final response = await apiClient.getChatHistory(widget.threadId!);
-      final messages = response['messages'] as List;
+      var messages = (response['messages'] as List);
+      messages.removeLast();
+
 
       // Set the threadId from the first message
       if (messages.isNotEmpty) {
@@ -164,6 +166,8 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
         threadId = widget.threadId!;
         progressValue = widget.progress!;
         isLoading = false;
+        isVictory = (widget.progress! == 100);
+        isCut = (widget.stepCount! >= 20);
       });
 
       // Wait for the next frame when messages are rendered

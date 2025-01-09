@@ -28,7 +28,7 @@ class LeaderboardItem {
     return LeaderboardItem(
       username: json['username'],
       totalScore: json['total_score'].toDouble(),
-      level: json['level'],
+      level: ((json['total_score']/100).toInt() + 1),
     );
   }
 }

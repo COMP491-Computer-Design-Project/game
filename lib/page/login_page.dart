@@ -223,7 +223,6 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final email = _emailController.text;
       final password = _passwordController.text;
-      print('içeri giriyourm');
       final response = await apiClient.login(email, password);
       if (response) {
         Navigator.push(
@@ -233,7 +232,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: $e')),
+        SnackBar(content: Text('Login failed. Invalid credentials.')),
       );
     }
   }
