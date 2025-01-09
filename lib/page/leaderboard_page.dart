@@ -80,17 +80,17 @@ class LeaderboardPage extends StatelessWidget {
                                 children: [
                                   _buildTopPlayer(
                                     leaderboard.leaderboard[1].username,
-                                    leaderboard.leaderboard[1].totalScore.toString(),
+                                    leaderboard.leaderboard[1].totalScore.toInt().toString(),
                                     2,
                                   ),
                                   _buildTopPlayer(
                                     leaderboard.leaderboard[0].username,
-                                    leaderboard.leaderboard[0].totalScore.toString(),
+                                    leaderboard.leaderboard[0].totalScore.toInt().toString(),
                                     1,
                                   ),
                                   _buildTopPlayer(
                                     leaderboard.leaderboard[2].username,
-                                    leaderboard.leaderboard[2].totalScore.toString(),
+                                    leaderboard.leaderboard[2].totalScore.toInt().toString(),
                                     3,
                                   ),
                                 ],
@@ -232,7 +232,7 @@ class LeaderboardPage extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${item.totalScore} points',
+                  '${item.totalScore.toInt()} points',
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,

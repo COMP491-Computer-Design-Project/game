@@ -233,7 +233,7 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         _buildStatCard('Games\nPlayed', userStats.gameCount.toString(), Icons.games),
                         const SizedBox(width: AppTheme.paddingSmall),
-                        _buildStatCard('Highest\nScore', userStats.maxScore.toString(), Icons.star),
+                        _buildStatCard('Highest\nScore', userStats.maxScore.toInt().toString(), Icons.star),
                         const SizedBox(width: AppTheme.paddingSmall),
                         _buildStatCard(
                             'Movies\nPlayed', userStats.uniqueMovieCount.toString(), Icons.movie_filter_outlined),

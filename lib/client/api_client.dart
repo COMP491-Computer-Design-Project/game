@@ -252,7 +252,6 @@ class ApiClient {
       return movies;
     } else {
       final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
-      print(body);
       throw ApiException(
         statusCode: response.statusCode,
         message: body['message'] ?? 'An unknown error occurred',

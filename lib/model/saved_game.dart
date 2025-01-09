@@ -9,6 +9,7 @@ class SavedGame {
   final int hp;
   final int sp;
   final int stepCount;
+  final bool isAvailable;
 
   const SavedGame({
     required this.movieName,
@@ -19,6 +20,7 @@ class SavedGame {
     required this.hp,
     required this.sp,
     required this.stepCount,
+    required this.isAvailable,
   });
 
   // Factory constructor to create an instance of SavedGame from a JSON map
@@ -32,6 +34,7 @@ class SavedGame {
       hp: json['hp'],
       sp: json['sp'],
       stepCount: json['step_count'],
+      isAvailable: (json['progress'] >= 100) ? false : true
     );
   }
 

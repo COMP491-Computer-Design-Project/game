@@ -18,6 +18,17 @@ class MovieData {
   });
 
   factory MovieData.fromJson(Map<String, dynamic> json) {
+    if(json['id'] == 3) {
+      return MovieData(
+        id: json['id'],
+        title: 'Generic Movie',
+        description: 'The user can choose and play any film of their preference.',
+        imagePath: 'assets/logo.png',
+        genre: json['genre'] ?? '',
+        rating: 10.0,
+        name: 'Generic Movie',
+      );
+    }
     return MovieData(
       id: json['id'] ?? 0,
       title: json['title'] ?? '',

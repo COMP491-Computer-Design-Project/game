@@ -238,9 +238,11 @@ class _ChooseMoviePageState extends State<ChooseMoviePage> {
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                   image: DecorationImage(
-                    image: NetworkImage(movie.imagePath),
+                    image: movie.imagePath.startsWith('http')
+                        ? NetworkImage(movie.imagePath)
+                        : AssetImage(movie.imagePath) as ImageProvider,
                     fit: BoxFit.cover,
-                  ),
+                  )
                 ),
               ),
             ),
