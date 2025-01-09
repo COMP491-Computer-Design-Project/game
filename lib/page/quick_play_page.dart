@@ -249,8 +249,9 @@ class _QuickPlayPageState extends State<QuickPlayPage> {
                                       borderRadius:
                                       BorderRadius.circular(12),
                                       image: DecorationImage(
-                                        image:
-                                        NetworkImage(movie.imagePath),
+                                        image: movie.imagePath.startsWith('http')
+                                            ? NetworkImage(movie.imagePath)
+                                            : AssetImage(movie.imagePath) as ImageProvider,
                                         fit: BoxFit.cover,
                                       ),
                                       boxShadow: [

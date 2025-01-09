@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:game/client/image_client.dart';
 import 'package:game/page/home_page.dart';
@@ -18,6 +19,7 @@ class GamePage extends StatefulWidget {
   final int? sp;
   final int? hp;
   final int? stepCount;
+  final int? progress;
 
 
   const GamePage({
@@ -32,6 +34,7 @@ class GamePage extends StatefulWidget {
     this.sp,
     this.hp,
     this.stepCount,
+    this.progress,
   }) : super(key: key);
 
   @override
@@ -159,6 +162,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
         staminaPoint = widget.sp!;
         steps = widget.stepCount!;
         threadId = widget.threadId!;
+        progressValue = widget.progress!;
         isLoading = false;
       });
 
@@ -451,7 +455,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
         }
       }
     }
-
+    print(options);
     setState(() => _options = options);
   }
 
@@ -466,20 +470,40 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
                 child: SizedBox(
-                  width: 120, // Set a fixed width for all buttons
-                  child: ElevatedButton(
-                    onPressed: () => _sendMessage(customText: entry.value),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.accent,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                  width: 120,
+                  child: AbsorbPointer(
+                    absorbing: (isLoading || isVictory || isCut),  // Disable interaction when isLoading is true
+                    child: ElevatedButton(
+                      onPressed: () => _sendMessage(customText: entry.value),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.accent,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      '${entry.key + 1}. ${entry.value.substring(0, entry.value.length > 4 ? 4 : entry.value.length)}...',
-                      style: const TextStyle(fontSize: 14),
-                      textAlign: TextAlign.center, // Center align the text
+                      child: MarkdownBody(
+                        data: '${
+                          entry.value.substring(0,
+                              entry.value.length > 7 ? 7 : entry.value.length)
+                        }...',
+                        styleSheet: MarkdownStyleSheet(
+                          p: const TextStyle(color: Colors.white),
+                          code: const TextStyle(
+                            color: Colors.amber,
+                            backgroundColor: Colors.black26,
+                          ),
+                          strong: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          em: const TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: Colors.white,
+                          ),
+                          listBullet: const TextStyle(color: Colors.white),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -489,42 +513,46 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
         ),
         SizedBox(height: 10),
         // Regular input bar
-        Container(
-          padding: const EdgeInsets.all(AppTheme.paddingSmall),
-          decoration: BoxDecoration(
-            color: Colors.black54,
-            border: Border(top: BorderSide(color: AppTheme.accent.withOpacity(0.3))),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingSmall),
-                  decoration: BoxDecoration(
-                    color: Colors.white10,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: TextField(
-                    controller: _controller,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hintText: 'What would you like to do?',
-                      hintStyle: TextStyle(color: Colors.white60),
-                      border: InputBorder.none,
+        AbsorbPointer( // Disable the TextField and IconButton when isLoading is true
+          absorbing: (isLoading || isVictory || isCut),
+          child: Container(
+            padding: const EdgeInsets.all(AppTheme.paddingSmall),
+            decoration: BoxDecoration(
+              color: Colors.black54,
+              border: Border(top: BorderSide(color: AppTheme.accent.withOpacity(0.3))),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingSmall),
+                    decoration: BoxDecoration(
+                      color: Colors.white10,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: TextField(
+                      controller: _controller,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        hintText: 'What would you like to do?',
+                        hintStyle: TextStyle(color: Colors.white60),
+                        border: InputBorder.none,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.send, color: Colors.white),
-                onPressed: _sendMessage,
-              ),
-            ],
+                IconButton(
+                  icon: const Icon(Icons.send, color: Colors.white),
+                  onPressed: _sendMessage,
+                ),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
+
 
   Widget _buildLoadingBar() {
     return Padding(
@@ -806,10 +834,6 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
               }
             }
 
-            // TODO : Butonu disable et
-            // TODO : load game'de baştai progress yanlış.
-            // TODO : Oyun bitince patlamasyon
-            // TODO: 1,2,3 seçeneklerini buton haline getir.
             // TODO: Tutorial diye bir yer ekle.
 
             if(parsedMessage.keys.contains('gameFinished')){
@@ -819,6 +843,7 @@ class _GamePageState extends State<GamePage> with TickerProviderStateMixin {
                   isVictory = parsedMessage['isWin'];
                   isCut = parsedMessage['isCut'];
                 });
+                sleep(Duration(seconds: 5));
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(

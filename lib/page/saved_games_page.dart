@@ -143,17 +143,10 @@ class _SavedGamesPageState extends State<SavedGamesPage> {
       ),
       child: InkWell(
         onTap: () {
-          if (game.isAvailable) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => GamePage(movieName: game.movieName, chatName: game.chatName, threadId: game.threadId, isNewGame: false, hp: game.hp, sp: game.sp, stepCount: game.stepCount)),
-            );
-          } else{
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('You cannot enter a game that is finished.')),
-            );
-          }
-
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => GamePage(movieName: game.movieName, chatName: game.chatName, threadId: game.threadId, isNewGame: false, hp: game.hp, sp: game.sp, stepCount: game.stepCount, progress: game.progress)),
+          );
         },
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.paddingMedium),
