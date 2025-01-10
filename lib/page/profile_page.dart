@@ -157,6 +157,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           () => _showAboutDialog(context),
                         ),
                         _buildSettingsTile(
+                          'Feedback',
+                          Icons.feedback_rounded,
+                              () => _showFeedbackDialog(context),
+                        ),
+                        _buildSettingsTile(
                           'Logout',
                           Icons.logout,
                           () {
@@ -246,6 +251,153 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showFeedbackDialog(BuildContext context) {
+    final TextEditingController feedbackController = TextEditingController();
+    int selectedRating = 0;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Colors.grey[900],
+          contentPadding: const EdgeInsets.all(24),
+          content: Container(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header with icon
+                  const Center(
+                    child: Icon(
+                      Icons.feedback_rounded,
+                      color: AppTheme.accent,
+                      size: 36,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Title
+                  const Center(
+                    child: Text(
+                      'How was your experience?',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedRating = index + 1;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Icon(
+                            selectedRating > index
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
+                            color: selectedRating > index
+                                ? Colors.amber
+                                : Colors.grey[400],
+                            size: 40,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[850],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextField(
+                      controller: feedbackController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Tell us your thoughts...',
+                        hintStyle: TextStyle(color: Colors.grey[400]),
+                        contentPadding: const EdgeInsets.all(16),
+                        border: InputBorder.none,
+                      ),
+                      maxLines: 4,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            final feedbackText = feedbackController.text;
+                            print('Rating: $selectedRating, Feedback: $feedbackText');
+                            Navigator.pop(context);
+                            _showSnackBar('Thank you for your feedback!');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey[900],
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Submit',
+                            style: TextStyle(
+                              color: AppTheme.accent,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppTheme.accent.withOpacity(0.8),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

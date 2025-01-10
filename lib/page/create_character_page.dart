@@ -22,9 +22,9 @@ class CharacterCreationPage extends StatefulWidget {
 class _CharacterCreationPageState extends State<CharacterCreationPage> {
   final int maxIncrements = 20;
   int remainingIncrements = 20;
-  final TextEditingController _characterNameController =
-      TextEditingController();
+  final TextEditingController _characterNameController = TextEditingController();
   final TextEditingController _chatNameController = TextEditingController();
+  final TextEditingController _movieNameController = TextEditingController();
 
   @override
   void initState() {
@@ -162,6 +162,29 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
                 child: ListView(
                   padding: const EdgeInsets.all(AppTheme.paddingMedium),
                   children: [
+                    if(widget.movieId == 'Generic Movie')
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white10,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: TextField(
+                          controller: _movieNameController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            hintText: 'Enter movie name',
+                            hintStyle: TextStyle(color: Colors.white60),
+                            prefixIcon:
+                            Icon(Icons.person_outline, color: Colors.white60),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: AppTheme.paddingSmall,
+                              vertical: AppTheme.paddingSmall,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppTheme.paddingSmall),
                     // Character Name Input
                     Container(
                       decoration: BoxDecoration(
@@ -279,8 +302,8 @@ class _CharacterCreationPageState extends State<CharacterCreationPage> {
       MaterialPageRoute(
         builder: (context) => GamePage(
           characterName: _characterNameController.text,
-          movieName: widget.movieName,
-          movieId: widget.movieId,
+          movieName: (widget.movieId == 'Generic Movie') ? (_movieNameController.text) : widget.movieName,
+          movieId: (widget.movieId == 'Generic Movie') ? (_movieNameController.text) : widget.movieId,
           chatName: _chatNameController.text,
           characterValues: characterValues,
           isNewGame: true,
